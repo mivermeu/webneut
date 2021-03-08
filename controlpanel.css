@@ -14,8 +14,12 @@
 
   /* border: 1px solid #f00; */
 }
-.controlpanel label       { text-align:right; }
-.controlpanel label:after { content: ":"; }
+.controlpanel label {
+  text-align: right;
+}
+.controlpanel label:after {
+  content: ":";
+}
 
 .grid-item {
   /* border: 1px solid #f00; */
@@ -27,5 +31,5 @@
 .label {
   /* padding: 1em; */
   /* border: 3px solid #f00; */
-  text-align: left
+  text-align: left;
 }
