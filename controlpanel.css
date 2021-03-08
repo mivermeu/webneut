@@ -1,0 +1,31 @@
+.controlpanel {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  row-gap: 0.2em;
+  column-gap: 0.2em;
+  grid-template-columns: 30px auto minmax(200px, 50%) auto;
+  padding: 20px;
+  background-color: white;
+  align-items: center;
+
+  justify-content: center;
+  align-content: center;
+  /* grid-auto-flow: column; */
+
+  /* border: 1px solid #f00; */
+}
+.controlpanel label       { text-align:right; }
+.controlpanel label:after { content: ":"; }
+
+.grid-item {
+  /* border: 1px solid #f00; */
+  padding: 0.2em;
+  margin: 0px;
+  /* text-align: center; */
+}
+
+.label {
+  /* padding: 1em; */
+  /* border: 3px solid #f00; */
+  text-align: left
+}

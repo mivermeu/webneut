@@ -1,0 +1,362 @@
+<!doctype>
+<html>
+	<head>
+    <link href="nouislider.css" rel="stylesheet">
+    <link href="controlpanel.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.0/nouislider.min.js"></script>
+    <!-- <link href="slider.css" rel="stylesheet" type="text/css" > -->
+    <!-- <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG"></script> -->
+    <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js"></script> -->
+    <script src="Oscillator.js"></script>
+    <script src="controlpanel.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://unpkg.com/mathjs@7.2.0/dist/math.min.js"></script>
+		<style>
+      body{
+        margin-right:10%;
+        margin-left:10%;
+        background: rgb(121, 84, 84);
+        font-family: serif;
+      }
+      #plotlyplot {
+        height: 400px;
+        margin: 0 auto;
+        
+        /* float: left; */
+      }
+      .radiobutton {
+        background-color: white;
+        padding-left: 20px;
+      }
+		</style>
+	</head>
+	<body>
+    <div id="plotlyplot"></div>
+    <div class="radiobutton">
+      <input type="radio" id="plottype1"
+             name="plottype" value="Linear">
+      <label for="plottype1">Linear</label>
+      <input type="radio" id="plottype2"
+             name="plottype" value="Ternary" checked=true>
+      <label for="plottype2">Ternary</label>
+    </div>
+    <div id="controlp" class="controlpanel"></div>
+    <div id="buttond">
+      <button id="downloadbutton" type="button">Download CSV</button>
+    </div>
+	</body>
+</html>
+<script>
+
+  // Determine type of plot from radio buttons.
+  var buttons = document.getElementsByName("plottype");
+  var ptype = "Ternary"
+  for(var i=0; i<buttons.length; ++i) {
+    buttons[i].onclick = function() {
+      ptype = this.value;
+      changePlotType(ptype);
+    }
+  }
+
+  // Get neutrino oscillation parameter struct.
+  var pars = makeParMap();
+  var mat = new Matrices(pars);
+
+  // Parameter ID to label map.
+  idToLabel = new Map();
+  idToLabel.set("L", "L [km]");
+  idToLabel.set("E", "E [GeV]");
+  idToLabel.set("rho", "\u03c1 [kg/m<sup>3</sup>]");
+  idToLabel.set("th12", "\u03b8<sub>12</sub> [rad]");
+  idToLabel.set("th23", "\u03b8<sub>23</sub> [rad]");
+  idToLabel.set("th13", "\u03b8<sub>13</sub> [rad]");
+  idToLabel.set("Dm21sq", "\u0394m<sup>2</sup><sub>21</sub> [10<sup>-5</sup> eV<sup>2</sup>]");
+  idToLabel.set("Dm31sq", "\u0394m<sup>2</sup><sub>31</sub> [10<sup>-5</sup> eV<sup>2</sup>]");
+  idToLabel.set("dCP", "\u03b4<sub>CP</sub> [rad]");
+
+  // Parameter ID to snapping points.
+  idToSnaps = new Map();
+  idToSnaps.set("L", []);
+  idToSnaps.set("E", []);
+  idToSnaps.set("rho", [2600]);
+  idToSnaps.set("th12", [0.5843, 3.14159265/2]);
+  idToSnaps.set("th23", [0.738, 3.14159265/2]);
+  idToSnaps.set("th13", [0.148, 3.14159265/2, 3.14159265, , 3.14159265/2*3]);
+  idToSnaps.set("Dm21sq", [7.5]);
+  idToSnaps.set("Dm31sq", [2.457, 0, -2.457]);
+  idToSnaps.set("dCP", [-0.62 * 3.14159265, 0, 3.14159265/2, -3.14159265/2]);
+  const snapfrac = 0.03; // Snap range as fraction of slider range.
+
+  // Second parameter map to avoid double updating on same parameters.
+  // (Nu set to invalid value for first update.)
+  var drawnPars = makeParMap();
+  drawnPars.set("nu", -1);
+
+  // Function to be plotted.
+  function mf(id, x, updateMat) {
+    let tmppars = new Map(pars)
+    tmppars.set(id, x);
+    if(updateMat) {
+      mat = new Matrices(tmppars)
+    }
+    return oscillate(tmppars, mat);
+  }
+
+  var xValues = math.range(0, 30000, 50).toArray();
+  var yValues = xValues.map(x => mf(x))
+  yValues = math.transpose(yValues);
+
+  // Render the ternary plot using plotly.
+  const ternarytrace = {
+    type: 'scatterternary',
+    mode: 'lines',
+    // line: {
+    //   color: xValues
+    // },
+
+    a: yValues[0],
+    b: yValues[1],
+    c: yValues[2]
+  }
+  
+  function lintrace(thisname, thiscolor, i) {
+    return {
+      mode: 'lines',
+      name: thisname,
+      line: {
+        color: thiscolor,
+      },
+      x: xValues,
+      y: yValues[i]
+    }
+  }
+  lindata = [
+    lintrace('\u03BD<sub>e</sub>', 'green', 0),
+    lintrace('\u03BD<sub>\u03BC</sub>', 'blue', 1),
+    lintrace('\u03BD<sub>\u03C4</sub>', 'red', 2)
+  ]
+  const linlayout = {
+    font: {
+      family: 'serif',
+      serif: 'times',
+      size: 18
+    },
+    xaxis: {
+      title: {
+        text: idToLabel.get("L"),
+        standoff: 100
+      }
+    },
+    yaxis: {
+      title: 'P(\u03BD\u2192\u03BD<sub>x</sub>)'
+    },
+    showlegend: true
+  }
+  
+  function makeAxis(title, tickangle) {
+    return {
+      title: title,
+      titlefont: { size: 20 },
+      tickangle: tickangle,
+      tickfont: { size: 15 },
+      tickcolor: 'rgba(0,0,0,0)',
+      ticklen: 5,
+      showline: true,
+      showgrid: true
+    };
+  }
+
+  const ternlayout = {
+    ternary: {
+      sum: 1,
+      aaxis: makeAxis('\u03BD<sub>e</sub>', 0),
+      baxis: makeAxis('\u03BD<sub>\u03BC</sub>', 45),
+      caxis: makeAxis('\u03BD<sub>\u03C4</sub>', -45)
+    },
+    margin: {
+      l: 40,
+      r: 40,
+      b: 50,
+      t: 50
+    }
+  }
+
+  // Function to change between plot types.
+  function changePlotType(ptype) {
+    if(ptype == "Linear") {
+      Plotly.newPlot('plotlyplot', lindata, linlayout);
+    } else if(ptype == "Ternary") {
+      Plotly.newPlot('plotlyplot', [ternarytrace], ternlayout);
+    }
+  }
+  changePlotType(ptype);
+
+  // Function to update the data in the graph.
+  function updateGraph(id="") {
+    // Check if the new parameters are different from those already drawn.
+    // If they're not equal, say so and immediately set them to be equal.
+    if(mapCheckAndSetEqual(pars, drawnPars)) {
+      return;
+    }
+
+    // Find the array in the parameter map. Needs one guaranteed array in pars.
+    let thisArrID = "invalid";
+    let thisArr = [0,0];
+    for(let [key, val] of pars) {
+      if(Array.isArray(val)) {
+        // If multiple ranges, don't update.
+        if(thisArrID != "invalid") {
+          return;
+        }
+        thisArrID = key;
+        thisArr = val;
+      }
+    }
+    // Changed/range variable is a mixing parameter.
+    var changedVarIsMixingPar = (id=="th12" || id=="th23" || id=="th13" || id=="Dm21sq" ||
+                                 id=="Dm31sq" || id=="dCP" || id=="rho");
+    var rangeVarIsMixingPar = (thisArrID=="th12" || thisArrID=="th23" || thisArrID=="th13" || thisArrID=="Dm21sq" ||
+                              thisArrID=="Dm31sq" || thisArrID=="dCP" || thisArrID=="rho");
+    // Only update mixing matrices once.
+    if(changedVarIsMixingPar && !rangeVarIsMixingPar) {
+      mat = new Matrices(pars);
+    }
+    
+    xValues = math.range(thisArr[0], thisArr[1], (thisArr[1]-thisArr[0])/pars.get("nsteps"), true).toArray();
+    // Pass on whether the mixing matrices need to be updated at every step.
+    yValues = xValues.map(x => mf(thisArrID, x, rangeVarIsMixingPar))
+    yValues = math.transpose(yValues);
+
+    ternarytrace['a'] = yValues[0];
+    ternarytrace['b'] = yValues[1];
+    ternarytrace['c'] = yValues[2];
+    for(var i =0; i < 3; ++i) {
+      lindata[i]['x'] = xValues;
+      lindata[i]['y'] = yValues[i];
+    }
+    linlayout.xaxis.title.text = idToLabel.get(thisArrID);
+
+    Plotly.redraw('plotlyplot')
+  }
+
+  // Set up control panel.
+  const controlp = document.getElementById("controlp");
+  var sliders = [];
+  sliders.push(addRow(controlp, "nsteps", "Number of points", [1,1000], 600, 0));
+  sliders.push(addRow(controlp, "nu", "Neutrino type", [0,2], 1, 0));
+  sliders.push(addRow(controlp, "L", idToLabel.get("L"), [0,40000], [0,33000], 0, idToSnaps.get("L")));
+  sliders.push(addRow(controlp, "E", idToLabel.get("E"), [0.3,20], 1, 3, idToSnaps.get("E")));
+  // sliders.push(addRow(controlp, "rho", idToLabel.get("rho"), [0,5000], 1, 0, idToSnaps.get("rho")));
+  sliders.push(addRow(controlp, "th12", idToLabel.get("th12"), [0,3.1416], 0.5843, 4, idToSnaps.get("th12")));
+  sliders.push(addRow(controlp, "th23", idToLabel.get("th23"), [0,3.1416], 0.738, 4, idToSnaps.get("th23")));
+  sliders.push(addRow(controlp, "th13", idToLabel.get("th13"), [0,2*3.1416], 0.148, 4, idToSnaps.get("th13")));
+  sliders.push(addRow(controlp, "Dm21sq", idToLabel.get("Dm21sq"), [0,10], 7.5, 4, idToSnaps.get("Dm21sq")));
+  sliders.push(addRow(controlp, "Dm31sq", idToLabel.get("Dm31sq"), [-5,5], 2.457, 4, idToSnaps.get("Dm31sq")));
+  sliders.push(addRow(controlp, "dCP", idToLabel.get("dCP"), [-3.1416,3.1416], 0, 4, idToSnaps.get("dCP")));
+  // Edit the nu slider to have step 1, for now.
+  nusliderd = document.getElementById("nu");
+  nusliderd.noUiSlider.updateOptions({step: 1});
+
+  var updateSliders = true;
+  function addListeners(slider_arr) {
+    // Check for changes in sliders. Change parameters
+    slider_arr.forEach(function(slider) {
+      // Determine snap range in value units.
+      const srange = slider.noUiSlider.options.range;
+      const snaprange = (srange['max']-srange['min'])*snapfrac;
+      
+      slider.noUiSlider.on('update', function(valuestrings) {
+        if(!updateSliders) return;
+        // Convert slider value(s) to numbers.
+        const toNumbers = arr => arr.map(Number);
+        var vals = toNumbers(valuestrings);
+        
+        // Slider snapping.
+        vals.forEach(function(v, i) {
+          if(idToSnaps.has(slider.id)) {
+            for(var si=0; si<idToSnaps.get(slider.id).length; ++si) {
+              const snapval = idToSnaps.get(slider.id)[si];
+              if(math.abs(v-snapval) < snaprange) {
+                vals[i] = snapval;
+                var tmpvals = [null, null];
+                tmpvals[i] = snapval;
+                // Use update guard to avoid update on set causing infinite loop.
+                updateSliders = false;
+                slider.noUiSlider.set(tmpvals, false, false);
+                updateSliders = true;
+              }
+            };
+          }
+        });
+        
+        // Change parameter map to reflect slider.
+        vals.length == 1? pars.set(slider.id, vals[0]): pars.set(slider.id, vals);
+
+        updateGraph(slider.id);
+      });
+    });
+  }
+
+  addListeners(sliders);
+
+  // Add listeners for buttons.
+  var ids = ["L", "E", "th12", "th23", "th13", "Dm21sq", "Dm31sq", "dCP"]
+  ids.forEach(function(id) {
+    var bd = document.getElementById(id+"_button");
+    bd.addEventListener("click", function() {
+      makeRange(sliders, id);
+      addListeners(sliders);
+    })
+  })
+
+  // Function to convert the nu arrays to a csv format.
+  function dataToCsv(x, y, p) {
+    // Header. First, find range parameter in parameter set.
+    var arrP = "";
+    for(const [key, val] of p.entries()) {
+      // console.log(key, val);
+      if(Array.isArray(val)) {
+        arrP = key;
+        break;
+      }
+    }
+    // Add header to arrays.
+    x.unshift(idToLabel.get(arrP));
+    y[0].unshift("nu_e");
+    y[1].unshift("nu_mu");
+    y[2].unshift("nu_tau");
+
+    // Data.
+    y.unshift(x);
+    data = math.transpose(y);
+
+    return data.map(function(row) {
+      return row.join(",");
+    }).join("\n");
+  }
+
+  // Download button functionality.
+  var saveData = (function () {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (xValues, yValues, pars, fileName) {
+      var csv = dataToCsv(xValues, yValues, pars);
+      var blob = new Blob([csv], {type: "octet/stream"});
+      var url = window.URL.createObjectURL(blob);
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    };
+  }());
+
+  var dbutton = document.getElementById("downloadbutton");
+  dbutton.addEventListener("click", function() {
+    var fileName = "nu.csv";
+
+    saveData(xValues, yValues, pars, fileName);
+  })
+
+</script>
