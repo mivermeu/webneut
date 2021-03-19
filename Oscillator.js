@@ -1,80 +1,123 @@
-// // A struct to hold neutrino oscillation parameters.
-// var makeParStruct = ({
-//   nu = 1, // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-//   anti = false, // Antineutrino or not.
-//   E = 1, // In GeV.
-//   L = 33060.7 * E, // PI / (1.267*Dm21sq) * E (Full Dm12sq period.) In km.
-//   th12 = 0.5843,
-//   th23 = 0.738,
-//   th13 = 0.148,
-//   Dm21sq = 7.5, // In 10^-5 eV^2
-//   Dm31sq = 2.457, // In 10^-3 eV^2
-//   dCP = 1.38 * 3.14159265,
-//   rho = 0, // In kg/m^3
-// } = {}) => ({
-//   nu,
-//   anti,
-//   E,
-//   L,
-//   th12,
-//   th23,
-//   th13,
-//   Dm21sq,
-//   Dm31sq,
-//   dCP,
-//   rho,
-// });
-
 // function makeParMap() {
-//   var pars = new Map();
+//   var pars = {};
 
-//   pars.set("nsteps", 300); // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-//   pars.set("nu", 1); // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-//   pars.set("anti", false); // Antineutrino or not.
-//   pars.set("E", 1); // In GeV.
-//   pars.set("L", [0, 33060.7]); // PI / (1.267*Dm21sq) * 1 (Full Dm12sq period.) In km.
-//   pars.set("th12", 0.5843);
-//   pars.set("th23", 0.738);
-//   pars.set("th13", 0.148);
-//   pars.set("Dm21sq", 7.5); // In 10^-5 eV^2
-//   pars.set("Dm31sq", 2.457); // In 10^-3 eV^2
-//   pars.set("dCP", 1.38 * 3.14159265);
-//   pars.set("rho", 0); // In kg/m^3
+//   pars["nsteps"] = 300; // Initial neutrino flavour. 0=e, 1=mu, 2=tau
+//   pars["nu"] = 1; // Initial neutrino flavour. 0=e, 1=mu, 2=tau
+//   pars["anti"] = false; // Antineutrino or not.
+//   pars["E"] = 1; // In GeV.
+//   pars["L"] = [0, 33060.7]; // PI / (1.267*Dm21sq) * 1 (Full Dm12sq period.) In km.
+//   pars["th12"] = 0.5843;
+//   pars["th23"] = 0.738;
+//   pars["th13"] = 0.148;
+//   pars["Dm21sq"] = 7.5; // In 10^-5 eV^2
+//   pars["Dm31sq"] = 2.457; // In 10^-3 eV^2
+//   pars["dCP"] = 1.38 * 3.14159265;
+//   pars["rho"] = 0; // In kg/m^3
 
 //   return pars;
 // }
 
 function makeParMap() {
-  var pars = {};
-
-  pars["nsteps"] = 300; // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-  pars["nu"] = 1; // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-  pars["anti"] = false; // Antineutrino or not.
-  pars["E"] = 1; // In GeV.
-  pars["L"] = [0, 33060.7]; // PI / (1.267*Dm21sq) * 1 (Full Dm12sq period.) In km.
-  pars["th12"] = 0.5843;
-  pars["th23"] = 0.738;
-  pars["th13"] = 0.148;
-  pars["Dm21sq"] = 7.5; // In 10^-5 eV^2
-  pars["Dm31sq"] = 2.457; // In 10^-3 eV^2
-  pars["dCP"] = 1.38 * 3.14159265;
-  pars["rho"] = 0; // In kg/m^3
-
-  return pars;
+  return {
+    nsteps: {
+      val: 600,
+      label: "Number of points",
+      snaps: [],
+      precision: 0,
+      limits: [1,1000]
+    },
+    nu: {
+      val: 1,
+      label: "Neutrino flavour",
+      snaps: [],
+      precision: 0,
+      limits: [0,2]
+    },
+    anti: {
+      val: 0,
+      label: "Antineutrino",
+      snaps: [],
+      precision: 0,
+      limits: [0,1]
+    },
+    E: {
+      val: 1,
+      label: "Energy [GeV]",
+      snaps: [],
+      precision: 3,
+      limits: [0.3, 20]
+    },
+    L: {
+      val: [0,33060],
+      label: "Path length [km]",
+      snaps: [],
+      precision: 0,
+      limits: [0, 40000]
+    },
+    th12: {
+      val: 0.5843,
+      label: "\u03b8<sub>12</sub> [rad]",
+      snaps: [0.5843, 3.14159265 / 2],
+      precision: 4,
+      limits: [0, 3.1416]
+    },
+    th23: {
+      val: 0.738,
+      label: "\u03b8<sub>23</sub> [rad]",
+      snaps: [0.738, 3.14159265 / 2],
+      precision: 4,
+      limits: [0, 3.1416]
+    },
+    th13: {
+      val: 0.148,
+      label: "\u03b8<sub>13</sub> [rad]",
+      snaps: [0.148, 3.14159265 / 2, 3.14159265, (3.14159265 / 2) * 3],
+      precision: 4,
+      limits: [0, 2 * 3.1416]
+    },
+    Dm21sq: {
+      val: 7.5,
+      label: "\u0394m<sup>2</sup><sub>21</sub> [10<sup>-5</sup> eV<sup>2</sup>]",
+      snaps: [7.5],
+      precision: 4,
+      limits: [0,10]
+    },
+    Dm31sq: {
+      val: 2.457,
+      label: "\u0394m<sup>2</sup><sub>31</sub> [10<sup>-5</sup> eV<sup>2</sup>]",
+      snaps: [2.457, 0, -2.457],
+      precision: 4,
+      limits: [-5, 5]
+    },
+    dCP: {
+      val: 0,
+      label: "\u03b4<sub>CP</sub> [rad]",
+      snaps: [-0.62 * 3.14159265, 0, 3.14159265 / 2, -3.14159265 / 2],
+      precision: 4,
+      limits: [-3.1416, 3.1416]
+    },
+    rho: {
+      val: 0,
+      label: "\u03c1 [kg/m<sup>3</sup>]",
+      snaps: [2600],
+      precision: 0,
+      limits: [0, 10000]
+    }
+  }
 }
 
 function Matrices(pars) {
-  this.s12 = math.sin(pars["th12"]);
-  this.s23 = math.sin(pars["th23"]);
-  this.s13 = math.sin(pars["th13"]);
-  this.c12 = math.cos(pars["th12"]);
-  this.c23 = math.cos(pars["th23"]);
-  this.c13 = math.cos(pars["th13"]);
+  this.s12 = math.sin(pars.th12.val);
+  this.s23 = math.sin(pars.th23.val);
+  this.s13 = math.sin(pars.th13.val);
+  this.c12 = math.cos(pars.th12.val);
+  this.c23 = math.cos(pars.th23.val);
+  this.c13 = math.cos(pars.th13.val);
 
   this.ch = 1;
-  if (pars["anti"]) this.ch = -1;
+  if (pars.anti.val) this.ch = -1;
 
-  this.edcp = math.exp(math.complex(0, this.ch * pars["dCP"]));
+  this.edcp = math.exp(math.complex(0, this.ch * pars.dCP.val));
   this.emdcp = math.pow(this.edcp, -1);
 
   // Construct oscillation matrix.
@@ -102,19 +145,19 @@ function Matrices(pars) {
   // Hamiltonian.
   this.H = math.matrix([
     [0, 0, 0],
-    [0, pars["Dm21sq"] * 1e-5, 0],
-    [0, 0, pars["Dm31sq"] * 1e-3],
+    [0, pars.Dm21sq.val * 1e-5, 0],
+    [0, 0, pars.Dm31sq.val * 1e-3],
   ]);
 }
 
 function oscillate(p, m) {
   var nu = [0, 0, 0];
-  nu[p["nu"]] = 1;
+  nu[p.nu.val] = 1;
   // const conv = 2.534; // Conversion factor from natural to useful units.
   const conv = 1e-6 / ((2 * 1.0545718e-34 * 299792458) / 1.602e-19); // Conversion factor from natural to useful units.
   var Hexp = math.multiply(
     math.complex(0, 1),
-    (-conv * p["L"]) / p["E"],
+    (-conv * p.L.val) / p.E.val,
     m.H
   );
   for (var j = 0; j < 3; ++j) Hexp._data[j][j] = math.exp(Hexp.get([j, j]));

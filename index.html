@@ -24,10 +24,10 @@
       <label for="plottype2">Ternary</label>
     </div>
     <div id="controlp" class="controlpanel">
-      <button id="test_button" class="grid-item" type="button">B</button>
+      <!-- <button id="test_button" class="grid-item" type="button">B</button>
       <div id="test_label" class="grid-item">Number of points</div>
       <div id="test_slider" class="grid-item"></div>
-      <div id="test_inputs" class="grid-item"></div>
+      <div id="test_inputs" class="grid-item"></div> -->
     </div>
     <div id="buttond">
       <button id="downloadbutton" type="button">Download CSV</button>
@@ -36,11 +36,11 @@
 </html>
 
 <script>
-  // Testing some things.
-  var testslider = document.getElementById("test_slider");
-  createSlider(testslider, [0, 10], 2, 0, []);
-  let testinputs = createInput(testslider);
-  document.getElementById("test_inputs").appendChild(testinputs);
+  // // Testing some things.
+  // var testslider = document.getElementById("test_slider");
+  // createSlider(testslider, [0, 10], 2, 0, []);
+  // let testinputs = createInput(testslider);
+  // document.getElementById("test_inputs").appendChild(testinputs);
 
   // Determine type of plot from radio buttons.
   var buttons = document.getElementsByName("plottype");
@@ -56,31 +56,6 @@
   var pars = makeParMap();
   var mat = new Matrices(pars);
 
-  // Parameter ID to label map.
-  let idToLabel = {};
-  idToLabel["L"] = "L [km]";
-  idToLabel["E"] = "E [GeV]";
-  idToLabel["rho"] = "\u03c1 [kg/m<sup>3</sup>]";
-  idToLabel["th12"] = "\u03b8<sub>12</sub> [rad]";
-  idToLabel["th23"] = "\u03b8<sub>23</sub> [rad]";
-  idToLabel["th13"] = "\u03b8<sub>13</sub> [rad]";
-  idToLabel["Dm21sq"] =
-    "\u0394m<sup>2</sup><sub>21</sub> [10<sup>-5</sup> eV<sup>2</sup>]";
-  idToLabel["Dm31sq"] =
-    "\u0394m<sup>2</sup><sub>31</sub> [10<sup>-5</sup> eV<sup>2</sup>]";
-  idToLabel["dCP"] = "\u03b4<sub>CP</sub> [rad]";
-
-  // Parameter ID to snapping points.
-  let idToSnaps = {};
-  idToSnaps["L"] = [];
-  idToSnaps["E"] = [];
-  idToSnaps["rho"] = [2600];
-  idToSnaps["th12"] = [0.5843, 3.14159265 / 2];
-  idToSnaps["th23"] = [0.738, 3.14159265 / 2];
-  idToSnaps["th13"] = [0.148, 3.14159265 / 2, 3.14159265, (3.14159265 / 2) * 3];
-  idToSnaps["Dm21sq"] = [7.5];
-  idToSnaps["Dm31sq"] = [2.457, 0, -2.457];
-  idToSnaps["dCP"] = [-0.62 * 3.14159265, 0, 3.14159265 / 2, -3.14159265 / 2];
   const snapfrac = 0.03; // Snap range as fraction of slider range.
 
   // Second parameter map to avoid double updating on same parameters.
@@ -90,8 +65,8 @@
 
   // Function to be plotted.
   function mf(id, x, updateMat) {
-    let tmppars = {...pars};
-    tmppars[id] = x;
+    let tmppars = JSON.parse(JSON.stringify(pars));
+    tmppars[id].val = x;
     if (updateMat) {
       mat = new Matrices(tmppars);
     }
@@ -99,7 +74,7 @@
   }
 
   var xValues = math.range(0, 30000, 50).toArray();
-  var yValues = xValues.map((x) => mf(x));
+  var yValues = xValues.map((x) => mf("L", x, true));
   yValues = math.transpose(yValues);
 
   // Render the ternary plot using plotly.
@@ -139,7 +114,7 @@
     },
     xaxis: {
       title: {
-        text: idToLabel["L"],
+        text: pars.L.label,
         standoff: 100,
       },
     },
@@ -198,14 +173,14 @@
     // Find the array in the parameter map. Needs one guaranteed array in pars.
     let thisArrID = "invalid";
     let thisArr = [0, 0];
-    for (var [key, val] of Object.entries(pars)) {
-      if (Array.isArray(val)) {
+    for (var [key, par] of Object.entries(pars)) {
+      if (Array.isArray(par.val)) {
         // If multiple ranges, don't update.
         if (thisArrID != "invalid") {
           return;
         }
         thisArrID = key;
-        thisArr = val;
+        thisArr = par.val;
       }
     }
     // Changed/range variable is a mixing parameter.
@@ -234,7 +209,7 @@
       .range(
         thisArr[0],
         thisArr[1],
-        (thisArr[1] - thisArr[0]) / pars["nsteps"],
+        (thisArr[1] - thisArr[0]) / pars.nsteps.val,
         true
       )
       .toArray();
@@ -249,7 +224,7 @@
       lindata[i]["x"] = xValues;
       lindata[i]["y"] = yValues[i];
     }
-    linlayout.xaxis.title.text = idToLabel[thisArrID];
+    linlayout.xaxis.title.text = pars[thisArrID].label;
 
     Plotly.redraw("plotlyplot");
   }
@@ -257,99 +232,17 @@
   // Set up control panel.
   const controlp = document.getElementById("controlp");
   var sliders = [];
-  sliders.push(
-    addRow(controlp, "nsteps", "Number of points", [1, 1000], 600, 0)
-  );
-  sliders.push(addRow(controlp, "nu", "Neutrino type", [0, 2], 1, 0));
-  sliders.push(
-    addRow(
-      controlp,
-      "L",
-      idToLabel["L"],
-      [0, 40000],
-      [0, 33000],
-      0,
-      idToSnaps["L"]
-    )
-  );
-  sliders.push(
-    addRow(
-      controlp,
-      "E",
-      idToLabel["E"],
-      [0.3, 20],
-      1,
-      3,
-      idToSnaps["E"]
-    )
-  );
-  // sliders.push(addRow(controlp, "rho", idToLabel["rho"], [0,5000], 1, 0, idToSnaps["rho"]));
-  sliders.push(
-    addRow(
-      controlp,
-      "th12",
-      idToLabel["th12"],
-      [0, 3.1416],
-      0.5843,
-      4,
-      idToSnaps["th12"]
-    )
-  );
-  sliders.push(
-    addRow(
-      controlp,
-      "th23",
-      idToLabel["th23"],
-      [0, 3.1416],
-      0.738,
-      4,
-      idToSnaps["th23"]
-    )
-  );
-  sliders.push(
-    addRow(
-      controlp,
-      "th13",
-      idToLabel["th13"],
-      [0, 2 * 3.1416],
-      0.148,
-      4,
-      idToSnaps["th13"]
-    )
-  );
-  sliders.push(
-    addRow(
-      controlp,
-      "Dm21sq",
-      idToLabel["Dm21sq"],
-      [0, 10],
-      7.5,
-      4,
-      idToSnaps["Dm21sq"]
-    )
-  );
-  sliders.push(
-    addRow(
-      controlp,
-      "Dm31sq",
-      idToLabel["Dm31sq"],
-      [-5, 5],
-      2.457,
-      4,
-      idToSnaps["Dm31sq"]
-    )
-  );
-  sliders.push(
-    addRow(
-      controlp,
-      "dCP",
-      idToLabel["dCP"],
-      [-3.1416, 3.1416],
-      0,
-      4,
-      idToSnaps["dCP"]
-    )
-  );
+  sliders.push(addRow(controlp, "nsteps", pars.nsteps));
+  sliders.push(addRow(controlp, "nu", pars.nu));
+  sliders.push(addRow(controlp, "L", pars.L));
+  sliders.push(addRow(controlp, "E", pars.E));
+  // sliders.push(addRow(controlp, "rho", pars.rho);
+  sliders.push(addRow(controlp, "th12", pars.th12));
+  sliders.push(addRow(controlp, "th23", pars.th23));
+  sliders.push(addRow(controlp, "th13", pars.th13));
+  sliders.push(addRow(controlp, "Dm21sq", pars.Dm21sq));
+  sliders.push(addRow(controlp, "Dm31sq", pars.Dm31sq));
+  sliders.push(addRow(controlp, "dCP", pars.dCP));
   // Edit the nu slider to have step 1, for now.
   nusliderd = document.getElementById("nu");
   nusliderd.noUiSlider.updateOptions({ step: 1 });
@@ -370,26 +263,24 @@
 
         // Slider snapping.
         vals.forEach(function (v, i) {
-          if (idToSnaps.hasOwnProperty(slider.id)) {
-            for (var si = 0; si < idToSnaps[slider.id].length; ++si) {
-              const snapval = idToSnaps[slider.id][si];
-              if (math.abs(v - snapval) < snaprange) {
-                vals[i] = snapval;
-                var tmpvals = [null, null];
-                tmpvals[i] = snapval;
-                // Use update guard to avoid update on set causing infinite loop.
-                updateSliders = false;
-                slider.noUiSlider.set(tmpvals, false, false);
-                updateSliders = true;
-              }
+          for (var si = 0; si < pars[slider.id].snaps.length; ++si) {
+            const snapval = pars[slider.id].snaps[si];
+            if (math.abs(v - snapval) < snaprange) {
+              vals[i] = snapval;
+              var tmpvals = [null, null];
+              tmpvals[i] = snapval;
+              // Use update guard to avoid update on set causing infinite loop.
+              updateSliders = false;
+              slider.noUiSlider.set(tmpvals, false, false);
+              updateSliders = true;
             }
           }
         });
 
         // Change parameter map to reflect slider.
         vals.length == 1
-          ? pars[slider.id] = vals[0]
-          : pars[slider.id] = vals;
+          ? (pars[slider.id].val = vals[0])
+          : (pars[slider.id].val = vals);
 
         updateGraph(slider.id);
       });
@@ -419,7 +310,7 @@
       }
     }
     // Add header to arrays.
-    x.unshift(idToLabel[arrP]);
+    x.unshift(pars[arrP].label);
     y[0].unshift("nu_e");
     y[1].unshift("nu_mu");
     y[2].unshift("nu_tau");

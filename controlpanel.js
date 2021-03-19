@@ -1,4 +1,4 @@
-function addRow(panel, id, label, slimits, sstart, precision, snaps = []) {
+function addRow(panel, id, pars) {
   // // Radio button.
   // let buttond = document.createElement("div");
   // buttond.innerText = "Hello there.";
@@ -12,14 +12,14 @@ function addRow(panel, id, label, slimits, sstart, precision, snaps = []) {
 
   // Label.
   let labeld = document.createElement("div");
-  labeld.innerHTML = label;
+  labeld.innerHTML = pars.label;
   labeld.id = id + "_label";
   panel.appendChild(labeld).className += "grid-item";
 
   // Slider.
   let sliderd = document.createElement("div");
   sliderd.id = id;
-  createSlider(sliderd, slimits, sstart, precision, snaps);
+  createSlider(sliderd, pars.limits, pars.val, pars.precision, pars.snaps);
   panel.appendChild(sliderd).className += "grid-item";
 
   // Input(s).
@@ -135,10 +135,12 @@ function mapCheckAndSetEqual(a, b) {
   }
 
   for (var key in a) {
-    if (a[key] != b[key]) {
-      // Sets the value of the differing key to be equal between maps!
-      b[key] = a[key];
-      return false;
+    for(var kkey in a[key]) {
+      if (a[key][kkey] != b[key][kkey]) {
+        // Sets the value of the differing key to be equal between maps!
+        b[key][kkey] = a[key][kkey];
+        return false;
+      }
     }
   }
 
