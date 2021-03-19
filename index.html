@@ -1,35 +1,13 @@
 <!DOCTYPE >
 <html>
   <head>
+    <link href="style.css" rel="stylesheet" />
     <link href="nouislider.css" rel="stylesheet" />
-    <link href="controlpanel.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.0/nouislider.min.js"></script>
-    <!-- <link href="slider.css" rel="stylesheet" type="text/css" > -->
-    <!-- <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG"></script> -->
-    <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js"></script> -->
     <script src="Oscillator.js"></script>
     <script src="controlpanel.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://unpkg.com/mathjs@7.2.0/dist/math.min.js"></script>
-    <style>
-      body {
-        margin-right: 10%;
-        margin-left: 10%;
-        background: rgb(121, 84, 84);
-        font-family: serif;
-      }
-      #plotlyplot {
-        height: 400px;
-        margin: 0 auto;
-
-        /* float: left; */
-      }
-      .radiobutton {
-        background-color: white;
-        padding-left: 20px;
-      }
-    </style>
   </head>
   <body>
     <div id="plotlyplot"></div>
@@ -45,13 +23,25 @@
       />
       <label for="plottype2">Ternary</label>
     </div>
-    <div id="controlp" class="controlpanel"></div>
+    <div id="controlp" class="controlpanel">
+      <button id="test_button" class="grid-item" type="button">B</button>
+      <div id="test_label" class="grid-item">Number of points</div>
+      <div id="test_slider" class="grid-item"></div>
+      <div id="test_inputs" class="grid-item"></div>
+    </div>
     <div id="buttond">
       <button id="downloadbutton" type="button">Download CSV</button>
     </div>
   </body>
 </html>
+
 <script>
+  // Testing some things.
+  var testslider = document.getElementById("test_slider");
+  createSlider(testslider, [0, 10], 2, 0, []);
+  let testinputs = createInput(testslider);
+  document.getElementById("test_inputs").appendChild(testinputs);
+
   // Determine type of plot from radio buttons.
   var buttons = document.getElementsByName("plottype");
   var ptype = "Ternary";
@@ -67,56 +57,41 @@
   var mat = new Matrices(pars);
 
   // Parameter ID to label map.
-  idToLabel = new Map();
-  idToLabel.set("L", "L [km]");
-  idToLabel.set("E", "E [GeV]");
-  idToLabel.set("rho", "\u03c1 [kg/m<sup>3</sup>]");
-  idToLabel.set("th12", "\u03b8<sub>12</sub> [rad]");
-  idToLabel.set("th23", "\u03b8<sub>23</sub> [rad]");
-  idToLabel.set("th13", "\u03b8<sub>13</sub> [rad]");
-  idToLabel.set(
-    "Dm21sq",
-    "\u0394m<sup>2</sup><sub>21</sub> [10<sup>-5</sup> eV<sup>2</sup>]"
-  );
-  idToLabel.set(
-    "Dm31sq",
-    "\u0394m<sup>2</sup><sub>31</sub> [10<sup>-5</sup> eV<sup>2</sup>]"
-  );
-  idToLabel.set("dCP", "\u03b4<sub>CP</sub> [rad]");
+  let idToLabel = {};
+  idToLabel["L"] = "L [km]";
+  idToLabel["E"] = "E [GeV]";
+  idToLabel["rho"] = "\u03c1 [kg/m<sup>3</sup>]";
+  idToLabel["th12"] = "\u03b8<sub>12</sub> [rad]";
+  idToLabel["th23"] = "\u03b8<sub>23</sub> [rad]";
+  idToLabel["th13"] = "\u03b8<sub>13</sub> [rad]";
+  idToLabel["Dm21sq"] =
+    "\u0394m<sup>2</sup><sub>21</sub> [10<sup>-5</sup> eV<sup>2</sup>]";
+  idToLabel["Dm31sq"] =
+    "\u0394m<sup>2</sup><sub>31</sub> [10<sup>-5</sup> eV<sup>2</sup>]";
+  idToLabel["dCP"] = "\u03b4<sub>CP</sub> [rad]";
 
   // Parameter ID to snapping points.
-  idToSnaps = new Map();
-  idToSnaps.set("L", []);
-  idToSnaps.set("E", []);
-  idToSnaps.set("rho", [2600]);
-  idToSnaps.set("th12", [0.5843, 3.14159265 / 2]);
-  idToSnaps.set("th23", [0.738, 3.14159265 / 2]);
-  idToSnaps.set("th13", [
-    0.148,
-    3.14159265 / 2,
-    3.14159265,
-    ,
-    (3.14159265 / 2) * 3,
-  ]);
-  idToSnaps.set("Dm21sq", [7.5]);
-  idToSnaps.set("Dm31sq", [2.457, 0, -2.457]);
-  idToSnaps.set("dCP", [
-    -0.62 * 3.14159265,
-    0,
-    3.14159265 / 2,
-    -3.14159265 / 2,
-  ]);
+  let idToSnaps = {};
+  idToSnaps["L"] = [];
+  idToSnaps["E"] = [];
+  idToSnaps["rho"] = [2600];
+  idToSnaps["th12"] = [0.5843, 3.14159265 / 2];
+  idToSnaps["th23"] = [0.738, 3.14159265 / 2];
+  idToSnaps["th13"] = [0.148, 3.14159265 / 2, 3.14159265, (3.14159265 / 2) * 3];
+  idToSnaps["Dm21sq"] = [7.5];
+  idToSnaps["Dm31sq"] = [2.457, 0, -2.457];
+  idToSnaps["dCP"] = [-0.62 * 3.14159265, 0, 3.14159265 / 2, -3.14159265 / 2];
   const snapfrac = 0.03; // Snap range as fraction of slider range.
 
   // Second parameter map to avoid double updating on same parameters.
   // (Nu set to invalid value for first update.)
   var drawnPars = makeParMap();
-  drawnPars.set("nu", -1);
+  drawnPars["nu"] = -1;
 
   // Function to be plotted.
   function mf(id, x, updateMat) {
-    let tmppars = new Map(pars);
-    tmppars.set(id, x);
+    let tmppars = {...pars};
+    tmppars[id] = x;
     if (updateMat) {
       mat = new Matrices(tmppars);
     }
@@ -164,7 +139,7 @@
     },
     xaxis: {
       title: {
-        text: idToLabel.get("L"),
+        text: idToLabel["L"],
         standoff: 100,
       },
     },
@@ -223,7 +198,7 @@
     // Find the array in the parameter map. Needs one guaranteed array in pars.
     let thisArrID = "invalid";
     let thisArr = [0, 0];
-    for (let [key, val] of pars) {
+    for (var [key, val] of Object.entries(pars)) {
       if (Array.isArray(val)) {
         // If multiple ranges, don't update.
         if (thisArrID != "invalid") {
@@ -259,7 +234,7 @@
       .range(
         thisArr[0],
         thisArr[1],
-        (thisArr[1] - thisArr[0]) / pars.get("nsteps"),
+        (thisArr[1] - thisArr[0]) / pars["nsteps"],
         true
       )
       .toArray();
@@ -274,7 +249,7 @@
       lindata[i]["x"] = xValues;
       lindata[i]["y"] = yValues[i];
     }
-    linlayout.xaxis.title.text = idToLabel.get(thisArrID);
+    linlayout.xaxis.title.text = idToLabel[thisArrID];
 
     Plotly.redraw("plotlyplot");
   }
@@ -290,89 +265,89 @@
     addRow(
       controlp,
       "L",
-      idToLabel.get("L"),
+      idToLabel["L"],
       [0, 40000],
       [0, 33000],
       0,
-      idToSnaps.get("L")
+      idToSnaps["L"]
     )
   );
   sliders.push(
     addRow(
       controlp,
       "E",
-      idToLabel.get("E"),
+      idToLabel["E"],
       [0.3, 20],
       1,
       3,
-      idToSnaps.get("E")
+      idToSnaps["E"]
     )
   );
-  // sliders.push(addRow(controlp, "rho", idToLabel.get("rho"), [0,5000], 1, 0, idToSnaps.get("rho")));
+  // sliders.push(addRow(controlp, "rho", idToLabel["rho"], [0,5000], 1, 0, idToSnaps["rho"]));
   sliders.push(
     addRow(
       controlp,
       "th12",
-      idToLabel.get("th12"),
+      idToLabel["th12"],
       [0, 3.1416],
       0.5843,
       4,
-      idToSnaps.get("th12")
+      idToSnaps["th12"]
     )
   );
   sliders.push(
     addRow(
       controlp,
       "th23",
-      idToLabel.get("th23"),
+      idToLabel["th23"],
       [0, 3.1416],
       0.738,
       4,
-      idToSnaps.get("th23")
+      idToSnaps["th23"]
     )
   );
   sliders.push(
     addRow(
       controlp,
       "th13",
-      idToLabel.get("th13"),
+      idToLabel["th13"],
       [0, 2 * 3.1416],
       0.148,
       4,
-      idToSnaps.get("th13")
+      idToSnaps["th13"]
     )
   );
   sliders.push(
     addRow(
       controlp,
       "Dm21sq",
-      idToLabel.get("Dm21sq"),
+      idToLabel["Dm21sq"],
       [0, 10],
       7.5,
       4,
-      idToSnaps.get("Dm21sq")
+      idToSnaps["Dm21sq"]
     )
   );
   sliders.push(
     addRow(
       controlp,
       "Dm31sq",
-      idToLabel.get("Dm31sq"),
+      idToLabel["Dm31sq"],
       [-5, 5],
       2.457,
       4,
-      idToSnaps.get("Dm31sq")
+      idToSnaps["Dm31sq"]
     )
   );
   sliders.push(
     addRow(
       controlp,
       "dCP",
-      idToLabel.get("dCP"),
+      idToLabel["dCP"],
       [-3.1416, 3.1416],
       0,
       4,
-      idToSnaps.get("dCP")
+      idToSnaps["dCP"]
     )
   );
   // Edit the nu slider to have step 1, for now.
@@ -395,9 +370,9 @@
 
         // Slider snapping.
         vals.forEach(function (v, i) {
-          if (idToSnaps.has(slider.id)) {
-            for (var si = 0; si < idToSnaps.get(slider.id).length; ++si) {
-              const snapval = idToSnaps.get(slider.id)[si];
+          if (idToSnaps.hasOwnProperty(slider.id)) {
+            for (var si = 0; si < idToSnaps[slider.id].length; ++si) {
+              const snapval = idToSnaps[slider.id][si];
               if (math.abs(v - snapval) < snaprange) {
                 vals[i] = snapval;
                 var tmpvals = [null, null];
@@ -413,8 +388,8 @@
 
         // Change parameter map to reflect slider.
         vals.length == 1
-          ? pars.set(slider.id, vals[0])
-          : pars.set(slider.id, vals);
+          ? pars[slider.id] = vals[0]
+          : pars[slider.id] = vals;
 
         updateGraph(slider.id);
       });
@@ -437,15 +412,14 @@
   function dataToCsv(x, y, p) {
     // Header. First, find range parameter in parameter set.
     var arrP = "";
-    for (const [key, val] of p.entries()) {
-      // console.log(key, val);
+    for (const [key, val] of Object.entries(p)) {
       if (Array.isArray(val)) {
         arrP = key;
         break;
       }
     }
     // Add header to arrays.
-    x.unshift(idToLabel.get(arrP));
+    x.unshift(idToLabel[arrP]);
     y[0].unshift("nu_e");
     y[1].unshift("nu_mu");
     y[2].unshift("nu_tau");

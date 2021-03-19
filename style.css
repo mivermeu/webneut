@@ -1,8 +1,25 @@
+body {
+  margin-right: 10%;
+  margin-left: 10%;
+  background: rgb(121, 84, 84);
+  font-family: serif;
+}
+#plotlyplot {
+  height: 400px;
+  margin: 0 auto;
+
+  /* float: left; */
+}
+.radiobutton {
+  background-color: white;
+  padding-left: 20px;
+}
+
+/* Control panel */
+
 .controlpanel {
   display: grid;
-  grid-template-columns: max-content max-content;
-  row-gap: 0.2em;
-  column-gap: 0.2em;
+  gap: 0.2em;
   grid-template-columns: 30px auto minmax(200px, 50%) auto;
   padding: 20px;
   background-color: white;

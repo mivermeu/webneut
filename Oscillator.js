@@ -1,61 +1,80 @@
-// A struct to hold neutrino oscillation parameters.
-var makeParStruct = ({
-  nu = 1, // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-  anti = false, // Antineutrino or not.
-  E = 1, // In GeV.
-  L = 33060.7 * E, // PI / (1.267*Dm21sq) * E (Full Dm12sq period.) In km.
-  th12 = 0.5843,
-  th23 = 0.738,
-  th13 = 0.148,
-  Dm21sq = 7.5, // In 10^-5 eV^2
-  Dm31sq = 2.457, // In 10^-3 eV^2
-  dCP = 1.38 * 3.14159265,
-  rho = 0, // In kg/m^3
-} = {}) => ({
-  nu,
-  anti,
-  E,
-  L,
-  th12,
-  th23,
-  th13,
-  Dm21sq,
-  Dm31sq,
-  dCP,
-  rho,
-});
+// // A struct to hold neutrino oscillation parameters.
+// var makeParStruct = ({
+//   nu = 1, // Initial neutrino flavour. 0=e, 1=mu, 2=tau
+//   anti = false, // Antineutrino or not.
+//   E = 1, // In GeV.
+//   L = 33060.7 * E, // PI / (1.267*Dm21sq) * E (Full Dm12sq period.) In km.
+//   th12 = 0.5843,
+//   th23 = 0.738,
+//   th13 = 0.148,
+//   Dm21sq = 7.5, // In 10^-5 eV^2
+//   Dm31sq = 2.457, // In 10^-3 eV^2
+//   dCP = 1.38 * 3.14159265,
+//   rho = 0, // In kg/m^3
+// } = {}) => ({
+//   nu,
+//   anti,
+//   E,
+//   L,
+//   th12,
+//   th23,
+//   th13,
+//   Dm21sq,
+//   Dm31sq,
+//   dCP,
+//   rho,
+// });
+
+// function makeParMap() {
+//   var pars = new Map();
+
+//   pars.set("nsteps", 300); // Initial neutrino flavour. 0=e, 1=mu, 2=tau
+//   pars.set("nu", 1); // Initial neutrino flavour. 0=e, 1=mu, 2=tau
+//   pars.set("anti", false); // Antineutrino or not.
+//   pars.set("E", 1); // In GeV.
+//   pars.set("L", [0, 33060.7]); // PI / (1.267*Dm21sq) * 1 (Full Dm12sq period.) In km.
+//   pars.set("th12", 0.5843);
+//   pars.set("th23", 0.738);
+//   pars.set("th13", 0.148);
+//   pars.set("Dm21sq", 7.5); // In 10^-5 eV^2
+//   pars.set("Dm31sq", 2.457); // In 10^-3 eV^2
+//   pars.set("dCP", 1.38 * 3.14159265);
+//   pars.set("rho", 0); // In kg/m^3
+
+//   return pars;
+// }
 
 function makeParMap() {
-  var pars = new Map();
+  var pars = {};
 
-  pars.set("nsteps", 300); // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-  pars.set("nu", 1); // Initial neutrino flavour. 0=e, 1=mu, 2=tau
-  pars.set("anti", false); // Antineutrino or not.
-  pars.set("E", 1); // In GeV.
-  pars.set("L", [0, 33060.7]); // PI / (1.267*Dm21sq) * 1 (Full Dm12sq period.) In km.
-  pars.set("th12", 0.5843);
-  pars.set("th23", 0.738);
-  pars.set("th13", 0.148);
-  pars.set("Dm21sq", 7.5); // In 10^-5 eV^2
-  pars.set("Dm31sq", 2.457); // In 10^-3 eV^2
-  pars.set("dCP", 1.38 * 3.14159265);
-  pars.set("rho", 0); // In kg/m^3
+  pars["nsteps"] = 300; // Initial neutrino flavour. 0=e, 1=mu, 2=tau
+  pars["nu"] = 1; // Initial neutrino flavour. 0=e, 1=mu, 2=tau
+  pars["anti"] = false; // Antineutrino or not.
+  pars["E"] = 1; // In GeV.
+  pars["L"] = [0, 33060.7]; // PI / (1.267*Dm21sq) * 1 (Full Dm12sq period.) In km.
+  pars["th12"] = 0.5843;
+  pars["th23"] = 0.738;
+  pars["th13"] = 0.148;
+  pars["Dm21sq"] = 7.5; // In 10^-5 eV^2
+  pars["Dm31sq"] = 2.457; // In 10^-3 eV^2
+  pars["dCP"] = 1.38 * 3.14159265;
+  pars["rho"] = 0; // In kg/m^3
 
   return pars;
 }
 
 function Matrices(pars) {
-  this.s12 = math.sin(pars.get("th12"));
-  this.s23 = math.sin(pars.get("th23"));
-  this.s13 = math.sin(pars.get("th13"));
-  this.c12 = math.cos(pars.get("th12"));
-  this.c23 = math.cos(pars.get("th23"));
-  this.c13 = math.cos(pars.get("th13"));
+  this.s12 = math.sin(pars["th12"]);
+  this.s23 = math.sin(pars["th23"]);
+  this.s13 = math.sin(pars["th13"]);
+  this.c12 = math.cos(pars["th12"]);
+  this.c23 = math.cos(pars["th23"]);
+  this.c13 = math.cos(pars["th13"]);
 
   this.ch = 1;
-  if (pars.get("anti")) this.ch = -1;
+  if (pars["anti"]) this.ch = -1;
 
-  this.edcp = math.exp(math.complex(0, this.ch * pars.get("dCP")));
+  this.edcp = math.exp(math.complex(0, this.ch * pars["dCP"]));
   this.emdcp = math.pow(this.edcp, -1);
 
   // Construct oscillation matrix.
@@ -83,19 +102,19 @@ function Matrices(pars) {
   // Hamiltonian.
   this.H = math.matrix([
     [0, 0, 0],
-    [0, pars.get("Dm21sq") * 1e-5, 0],
-    [0, 0, pars.get("Dm31sq") * 1e-3],
+    [0, pars["Dm21sq"] * 1e-5, 0],
+    [0, 0, pars["Dm31sq"] * 1e-3],
   ]);
 }
 
 function oscillate(p, m) {
   var nu = [0, 0, 0];
-  nu[p.get("nu")] = 1;
+  nu[p["nu"]] = 1;
   // const conv = 2.534; // Conversion factor from natural to useful units.
   const conv = 1e-6 / ((2 * 1.0545718e-34 * 299792458) / 1.602e-19); // Conversion factor from natural to useful units.
   var Hexp = math.multiply(
     math.complex(0, 1),
-    (-conv * p.get("L")) / p.get("E"),
+    (-conv * p["L"]) / p["E"],
     m.H
   );
   for (var j = 0; j < 3; ++j) Hexp._data[j][j] = math.exp(Hexp.get([j, j]));

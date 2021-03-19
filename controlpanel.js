@@ -29,7 +29,7 @@ function addRow(panel, id, label, slimits, sstart, precision, snaps = []) {
   return sliderd;
 }
 
-function createSlider(el, slimits, sstart, precision, snaps) {
+function createSlider(el, slimits, sstart, precision, snaps = []) {
   noUiSlider.create(el, {
     start: sstart,
     orientation: "horizontal",
@@ -134,10 +134,10 @@ function mapCheckAndSetEqual(a, b) {
     return false;
   }
 
-  for (var key of a.keys()) {
-    if (a.get(key) != b.get(key)) {
+  for (var key in a) {
+    if (a[key] != b[key]) {
       // Sets the value of the differing key to be equal between maps!
-      b.set(key, a.get(key));
+      b[key] = a[key];
       return false;
     }
   }
