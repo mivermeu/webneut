@@ -6,6 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.0/nouislider.min.js"></script>
     <script src="Oscillator.js"></script>
     <script src="controlpanel.js"></script>
+    <script src="plot.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://unpkg.com/mathjs@7.2.0/dist/math.min.js"></script>
   </head>
@@ -48,7 +49,7 @@
   for (var i = 0; i < buttons.length; ++i) {
     buttons[i].onclick = function () {
       ptype = this.value;
-      changePlotType(ptype);
+      changePlotType(ptype, xValues, yValues);
     };
   }
 
@@ -56,16 +57,14 @@
   var pars = makeParMap();
   var mat = new Matrices(pars);
 
-  const snapfrac = 0.03; // Snap range as fraction of slider range.
-
   // Second parameter map to avoid double updating on same parameters.
   // (Nu set to invalid value for first update.)
   var drawnPars = makeParMap();
   drawnPars["nu"] = -1;
 
   // Function to be plotted.
-  function mf(id, x, updateMat) {
-    let tmppars = JSON.parse(JSON.stringify(pars));
+  function mf(p, id, x, updateMat) {
+    let tmppars = JSON.parse(JSON.stringify(p));
     tmppars[id].val = x;
     if (updateMat) {
       mat = new Matrices(tmppars);
@@ -74,93 +73,11 @@
   }
 
   var xValues = math.range(0, 30000, 50).toArray();
-  var yValues = xValues.map((x) => mf("L", x, true));
+  var yValues = xValues.map((x) => mf(pars, "L", x, true));
   yValues = math.transpose(yValues);
 
   // Render the ternary plot using plotly.
-  const ternarytrace = {
-    type: "scatterternary",
-    mode: "lines",
-    // line: {
-    //   color: xValues
-    // },
-
-    a: yValues[0],
-    b: yValues[1],
-    c: yValues[2],
-  };
-
-  function lintrace(thisname, thiscolor, i) {
-    return {
-      mode: "lines",
-      name: thisname,
-      line: {
-        color: thiscolor,
-      },
-      x: xValues,
-      y: yValues[i],
-    };
-  }
-  lindata = [
-    lintrace("\u03BD<sub>e</sub>", "green", 0),
-    lintrace("\u03BD<sub>\u03BC</sub>", "blue", 1),
-    lintrace("\u03BD<sub>\u03C4</sub>", "red", 2),
-  ];
-  const linlayout = {
-    font: {
-      family: "serif",
-      serif: "times",
-      size: 18,
-    },
-    xaxis: {
-      title: {
-        text: pars.L.label,
-        standoff: 100,
-      },
-    },
-    yaxis: {
-      title: "P(\u03BD\u2192\u03BD<sub>x</sub>)",
-    },
-    showlegend: true,
-  };
-
-  function makeAxis(title, tickangle) {
-    return {
-      title: title,
-      titlefont: { size: 20 },
-      tickangle: tickangle,
-      tickfont: { size: 15 },
-      tickcolor: "rgba(0,0,0,0)",
-      ticklen: 5,
-      showline: true,
-      showgrid: true,
-    };
-  }
-
-  const ternlayout = {
-    ternary: {
-      sum: 1,
-      aaxis: makeAxis("\u03BD<sub>e</sub>", 0),
-      baxis: makeAxis("\u03BD<sub>\u03BC</sub>", 45),
-      caxis: makeAxis("\u03BD<sub>\u03C4</sub>", -45),
-    },
-    margin: {
-      l: 40,
-      r: 40,
-      b: 50,
-      t: 50,
-    },
-  };
-
-  // Function to change between plot types.
-  function changePlotType(ptype) {
-    if (ptype == "Linear") {
-      Plotly.newPlot("plotlyplot", lindata, linlayout);
-    } else if (ptype == "Ternary") {
-      Plotly.newPlot("plotlyplot", [ternarytrace], ternlayout);
-    }
-  }
-  changePlotType(ptype);
+  changePlotType(ptype, xValues, yValues);
 
   // Function to update the data in the graph.
   function updateGraph(id = "") {
@@ -214,19 +131,26 @@
       )
       .toArray();
     // Pass on whether the mixing matrices need to be updated at every step.
-    yValues = xValues.map((x) => mf(thisArrID, x, rangeVarIsMixingPar));
+    yValues = xValues.map((x) => mf(pars, thisArrID, x, rangeVarIsMixingPar));
     yValues = math.transpose(yValues);
 
-    ternarytrace["a"] = yValues[0];
-    ternarytrace["b"] = yValues[1];
-    ternarytrace["c"] = yValues[2];
-    for (var i = 0; i < 3; ++i) {
-      lindata[i]["x"] = xValues;
-      lindata[i]["y"] = yValues[i];
+    if (ptype == "Ternary") {
+      Plotly.restyle("plotlyplot", {
+        a: [yValues[0]],
+        b: [yValues[1]],
+        c: [yValues[2]],
+      });
+    } else if (ptype == "Linear") {
+      Plotly.restyle(
+        "plotlyplot",
+        {
+          x: [xValues],
+          y: [yValues[0], yValues[1], yValues[2]],
+        },
+        [0, 1, 2]
+      );
+      linlayout.xaxis.title.text = pars[thisArrID].label;
     }
-    linlayout.xaxis.title.text = pars[thisArrID].label;
-
-    Plotly.redraw("plotlyplot");
   }
 
   // Set up control panel.
@@ -247,7 +171,8 @@
   nusliderd = document.getElementById("nu");
   nusliderd.noUiSlider.updateOptions({ step: 1 });
 
-  var updateSliders = true;
+  var updateSliders = true; // Update guard.
+  const snapfrac = 0.03; // Snap range as fraction of slider range.
   function addListeners(slider_arr) {
     // Check for changes in sliders. Change parameters
     slider_arr.forEach(function (slider) {
@@ -258,8 +183,7 @@
       slider.noUiSlider.on("update", function (valuestrings) {
         if (!updateSliders) return;
         // Convert slider value(s) to numbers.
-        const toNumbers = (arr) => arr.map(Number);
-        var vals = toNumbers(valuestrings);
+        var vals = valuestrings.map(Number);
 
         // Slider snapping.
         vals.forEach(function (v, i) {
