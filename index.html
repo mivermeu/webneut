@@ -43,17 +43,7 @@
   // let testinputs = createInput(testslider);
   // document.getElementById("test_inputs").appendChild(testinputs);
 
-  // Determine type of plot from radio buttons.
-  var buttons = document.getElementsByName("plottype");
-  var ptype = "Ternary";
-  for (var i = 0; i < buttons.length; ++i) {
-    buttons[i].onclick = function () {
-      ptype = this.value;
-      changePlotType(ptype, xValues, yValues);
-    };
-  }
-
-  // Get neutrino oscillation parameter struct.
+  // Get neutrino oscillation parameter objects.
   var pars = makeParMap();
   var mat = new Matrices(pars);
 
@@ -62,22 +52,22 @@
   var drawnPars = makeParMap();
   drawnPars["nu"] = -1;
 
-  // Function to be plotted.
-  function mf(p, id, x, updateMat) {
-    let tmppars = JSON.parse(JSON.stringify(p));
-    tmppars[id].val = x;
-    if (updateMat) {
-      mat = new Matrices(tmppars);
-    }
-    return oscillate(tmppars, mat);
+  // Arrays to store oscillation results.
+  var xValues = [];
+  var yValues = [];
+
+  // Determine type of plot from radio buttons.
+  var buttons = document.getElementsByName("plottype");
+  var ptype = "Ternary";
+  for (var i = 0; i < buttons.length; ++i) {
+    buttons[i].onclick = function () {
+      ptype = this.value;
+      createPlot("plotlyplot", ptype, pars, xValues, yValues);
+    };
   }
 
-  var xValues = math.range(0, 30000, 50).toArray();
-  var yValues = xValues.map((x) => mf(pars, "L", x, true));
-  yValues = math.transpose(yValues);
-
   // Render the ternary plot using plotly.
-  changePlotType(ptype, xValues, yValues);
+  createPlot("plotlyplot", ptype, pars, xValues, yValues);
 
   // Function to update the data in the graph.
   function updateGraph(id = "") {
@@ -100,6 +90,10 @@
         thisArr = par.val;
       }
     }
+    // If no array found in parameter map, do nothing.
+    if (thisArrID == "invalid") {
+      return;
+    }
     // Changed/range variable is a mixing parameter.
     var changedVarIsMixingPar =
       id == "th12" ||
@@ -117,11 +111,12 @@
       thisArrID == "Dm31sq" ||
       thisArrID == "dCP" ||
       thisArrID == "rho";
-    // Only update mixing matrices once.
+    // Only update mixing matrices once if changed variable is mixing parameter.
     if (changedVarIsMixingPar && !rangeVarIsMixingPar) {
       mat = new Matrices(pars);
     }
 
+    // Get x range and reset y values.
     xValues = math
       .range(
         thisArr[0],
@@ -130,10 +125,20 @@
         true
       )
       .toArray();
-    // Pass on whether the mixing matrices need to be updated at every step.
-    yValues = xValues.map((x) => mf(pars, thisArrID, x, rangeVarIsMixingPar));
+    yValues = [];
+
+    // Use a temporary non-range parameter map to get oscillation results.
+    let tmppars = JSON.parse(JSON.stringify(pars));
+    for(let x of xValues) {
+      tmppars[thisArrID].val = x;
+      if (rangeVarIsMixingPar) {
+        mat.update(tmppars);
+      }
+      yValues.push(oscillate(tmppars, mat));
+    }
     yValues = math.transpose(yValues);
 
+    // Update plot data.
     if (ptype == "Ternary") {
       Plotly.restyle("plotlyplot", {
         a: [yValues[0]],
@@ -149,7 +154,7 @@
         },
         [0, 1, 2]
       );
-      linlayout.xaxis.title.text = pars[thisArrID].label;
+      // linlayout.xaxis.title.text = pars[thisArrID].label;
     }
   }
 
@@ -220,6 +225,11 @@
     bd.addEventListener("click", function () {
       makeRange(sliders, id);
       addListeners(sliders);
+      if(ptype == "Linear") {
+        Plotly.relayout("plotlyplot", {
+          "xaxis.title.text": pars[id].label,
+        });
+      }
     });
   });
 
@@ -227,22 +237,22 @@
   function dataToCsv(x, y, p) {
     // Header. First, find range parameter in parameter set.
     var arrP = "";
-    for (const [key, val] of Object.entries(p)) {
-      if (Array.isArray(val)) {
+    for (const [key, par] of Object.entries(p)) {
+      if (Array.isArray(par.val)) {
         arrP = key;
         break;
       }
     }
-    // Add header to arrays.
-    x.unshift(pars[arrP].label);
-    y[0].unshift("nu_e");
-    y[1].unshift("nu_mu");
-    y[2].unshift("nu_tau");
+    // Do nothing if no range was found.
+    if (arrP == "") return;
 
-    // Data.
-    y.unshift(x);
-    data = math.transpose(y);
+    // Add headers and concatenate arrays.
+    data = [
+      [pars[arrP].label, "nu_e", "nu_mu", "nu_tau"],
+      ...math.transpose([x, ...y]),
+    ];
 
+    // Cast into csv format.
     return data
       .map(function (row) {
         return row.join(",");

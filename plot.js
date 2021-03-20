@@ -30,8 +30,16 @@ function makeTernAxis(title, tickangle) {
 }
 
 // Function to create plot and change between plot types.
-function changePlotType(ptype, xval, yval) {
+function createPlot(div, ptype, pars, xval, yval) {
   if (ptype == "Linear") {
+    // Find range variable for label.
+    let rangeID = "";
+    for(let [key,par] of Object.entries(pars)) {
+      if(Array.isArray(par.val)) {
+        rangeID = key;
+        break;
+      }
+    }
     const linlayout = {
       font: {
         family: "serif",
@@ -40,7 +48,7 @@ function changePlotType(ptype, xval, yval) {
       },
       xaxis: {
         title: {
-          text: pars.L.label,
+          text: pars[rangeID].label,
           standoff: 100,
         },
       },
@@ -50,11 +58,12 @@ function changePlotType(ptype, xval, yval) {
       showlegend: true,
     };
 
-    Plotly.newPlot("plotlyplot", lintraces(xval, yval), linlayout);
+    Plotly.newPlot(div, lintraces(xval, yval), linlayout);
   } else if (ptype == "Ternary") {
     const ternarytrace = {
       type: "scatterternary",
       mode: "lines",
+      // It would be extremely nice to have a colour gradient in this line, but this is currently impossible.
       // line: {
       //   color: xval
       // },
@@ -79,6 +88,6 @@ function changePlotType(ptype, xval, yval) {
       },
     };
 
-    Plotly.newPlot("plotlyplot", [ternarytrace], ternlayout);
+    Plotly.newPlot(div, [ternarytrace], ternlayout);
   }
 }

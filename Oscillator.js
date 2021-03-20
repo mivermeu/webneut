@@ -106,48 +106,53 @@ function makeParMap() {
   }
 }
 
-function Matrices(pars) {
-  this.s12 = math.sin(pars.th12.val);
-  this.s23 = math.sin(pars.th23.val);
-  this.s13 = math.sin(pars.th13.val);
-  this.c12 = math.cos(pars.th12.val);
-  this.c23 = math.cos(pars.th23.val);
-  this.c13 = math.cos(pars.th13.val);
+class Matrices {
+  constructor(pars) {
+    this.update(pars);
+  }
+  update = function(pars) {
+    this.s12 = math.sin(pars.th12.val);
+    this.s23 = math.sin(pars.th23.val);
+    this.s13 = math.sin(pars.th13.val);
+    this.c12 = math.cos(pars.th12.val);
+    this.c23 = math.cos(pars.th23.val);
+    this.c13 = math.cos(pars.th13.val);
 
-  this.ch = 1;
-  if (pars.anti.val) this.ch = -1;
+    this.ch = 1;
+    if (pars.anti.val) this.ch = -1;
 
-  this.edcp = math.exp(math.complex(0, this.ch * pars.dCP.val));
-  this.emdcp = math.pow(this.edcp, -1);
+    this.edcp = math.exp(math.complex(0, this.ch * pars.dCP.val));
+    this.emdcp = math.pow(this.edcp, -1);
 
-  // Construct oscillation matrix.
-  this.U1 = math.matrix([
-    [1, 0, 0],
-    [0, this.c23, this.s23],
-    [0, -this.s23, this.c23],
-  ]);
+    // Construct oscillation matrix.
+    this.U1 = math.matrix([
+      [1, 0, 0],
+      [0, this.c23, this.s23],
+      [0, -this.s23, this.c23],
+    ]);
 
-  this.U2 = math.matrix([
-    [this.c13, 0, math.multiply(this.s13, this.emdcp)],
-    [0, 1, 0],
-    [math.multiply(-this.s13, this.edcp), 0, this.c13],
-  ]);
+    this.U2 = math.matrix([
+      [this.c13, 0, math.multiply(this.s13, this.emdcp)],
+      [0, 1, 0],
+      [math.multiply(-this.s13, this.edcp), 0, this.c13],
+    ]);
 
-  this.U3 = math.matrix([
-    [this.c12, this.s12, 0],
-    [-this.s12, this.c12, 0],
-    [0, 0, 1],
-  ]);
+    this.U3 = math.matrix([
+      [this.c12, this.s12, 0],
+      [-this.s12, this.c12, 0],
+      [0, 0, 1],
+    ]);
 
-  this.U = math.multiply(this.U1, this.U2, this.U3);
-  this.Ud = math.ctranspose(this.U);
+    this.U = math.multiply(this.U1, this.U2, this.U3);
+    this.Ud = math.ctranspose(this.U);
 
-  // Hamiltonian.
-  this.H = math.matrix([
-    [0, 0, 0],
-    [0, pars.Dm21sq.val * 1e-5, 0],
-    [0, 0, pars.Dm31sq.val * 1e-3],
-  ]);
+    // Hamiltonian.
+    this.H = math.matrix([
+      [0, 0, 0],
+      [0, pars.Dm21sq.val * 1e-5, 0],
+      [0, 0, pars.Dm31sq.val * 1e-3],
+    ]);
+  }
 }
 
 function oscillate(p, m) {
