@@ -38,12 +38,12 @@ body {
   content: ":";
 }
 
-.grid-item {
-  /* border: 1px solid #f00; */
+/* .grid-item {
+  border: 1px solid #f00;
   padding: 0.2em;
   margin: 0px;
-  /* text-align: center; */
-}
+  text-align: center;
+} */
 
 .label {
   /* padding: 1em; */

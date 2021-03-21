@@ -1,25 +1,14 @@
-function addRow(panel, id, pars) {
-  // Button.
-  var buttond = document.createElement("button");
-  buttond.innerHTML = "R";
-  buttond.id = id + "_button";
-  panel.appendChild(buttond).classname += "grid-item";
-
+function addRow(id, pars) {
   // Label.
-  let labeld = document.createElement("div");
+  let labeld = document.getElementById(id+"_label");
   labeld.innerHTML = pars.label;
-  labeld.id = id + "_label";
-  panel.appendChild(labeld).className += "grid-item";
 
   // Slider.
-  let sliderd = document.createElement("div");
-  sliderd.id = id;
+  let sliderd = document.getElementById(id+"_slider");
   createSlider(sliderd, pars.limits, pars.val, pars.precision, pars.snaps);
-  panel.appendChild(sliderd).className += "grid-item";
 
   // Input(s).
-  let inputs = createInput(sliderd);
-  panel.appendChild(inputs).className += "grid-item";
+  document.getElementById(id+"_inputs").replaceWith(createInput(sliderd));
 
   return sliderd;
 }
@@ -55,7 +44,7 @@ function createInput(sliderd) {
   let sstart = sliderd.noUiSlider.options.start;
   // Create as many input fields as slider knobs.
   if (sstart.constructor != Array) sstart = [sstart];
-  var inputs = document.createElement("span");
+  var inputs = document.createElement("div");
   sstart.forEach(function (_, handle) {
     let thisinput = document.createElement("input");
     thisinput.style.width = "100px";
@@ -78,10 +67,10 @@ function createInput(sliderd) {
       }
     });
 
-    inputs.appendChild(thisinput).className += "grid-item";
+    inputs.appendChild(thisinput);
   });
   // Add input fields to span in grid cell.
-  inputs.id = sliderd.id + "_input";
+  inputs.id = sliderd.id.substr(0, sliderd.id.indexOf("_")) + "_input";
 
   return inputs;
 }
@@ -92,6 +81,7 @@ function makeRange(sliders, id) {
     Array.isArray(slider.noUiSlider.options.start)
   );
   rangesliders.forEach(function (slider) {
+    const key = slider.id.substr(0, slider.id.indexOf("_"));
     // Remake range sliders with a single handle.
     var ops = slider.noUiSlider.options;
     ops.start = slider.noUiSlider.get()[1];
@@ -99,10 +89,10 @@ function makeRange(sliders, id) {
     noUiSlider.create(slider, ops);
     // Remake input fields.
     let inputs = createInput(slider);
-    document.getElementById(slider.id + "_input").replaceWith(inputs);
+    document.getElementById(key + "_input").replaceWith(inputs);
   });
   // Find the new range slider and remake it with two handles.
-  const newrangeslider = sliders.find((slider) => slider.id == id);
+  const newrangeslider = sliders.find((slider) => slider.id == id+"_slider");
   var ops = newrangeslider.noUiSlider.options;
   ops.start = [
     newrangeslider.noUiSlider.options.range["min"],
@@ -112,5 +102,5 @@ function makeRange(sliders, id) {
   noUiSlider.create(newrangeslider, ops);
   // Remake input fields.
   let input = createInput(newrangeslider);
-  document.getElementById(newrangeslider.id + "_input").replaceWith(input);
+  document.getElementById(id + "_input").replaceWith(input);
 }

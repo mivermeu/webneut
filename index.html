@@ -26,10 +26,56 @@
       <label for="plottype2">Ternary</label>
     </div>
     <div id="controlp" class="controlpanel">
-      <!-- <button id="test_button" class="grid-item" type="button">B</button>
-      <div id="test_label" class="grid-item">Number of points</div>
-      <div id="test_slider" class="grid-item"></div>
-      <div id="test_inputs" class="grid-item"></div> -->
+      <button id="nsteps_button" class="grid-item" type="button">B</button>
+      <div id="nsteps_label" class="grid-item"></div>
+      <div id="nsteps_slider" class="grid-item"></div>
+      <div id="nsteps_inputs" class="grid-item"></div>
+      
+      <button id="nu_button" class="grid-item" type="button">B</button>
+      <div id="nu_label" class="grid-item"></div>
+      <div id="nu_slider" class="grid-item"></div>
+      <div id="nu_inputs" class="grid-item"></div>
+      
+      <button id="L_button" class="grid-item" type="button">B</button>
+      <div id="L_label" class="grid-item"></div>
+      <div id="L_slider" class="grid-item"></div>
+      <div id="L_inputs" class="grid-item"></div>
+      
+      <button id="E_button" class="grid-item" type="button">B</button>
+      <div id="E_label" class="grid-item"></div>
+      <div id="E_slider" class="grid-item"></div>
+      <div id="E_inputs" class="grid-item"></div>
+      
+      <button id="th12_button" class="grid-item" type="button">B</button>
+      <div id="th12_label" class="grid-item"></div>
+      <div id="th12_slider" class="grid-item"></div>
+      <div id="th12_inputs" class="grid-item"></div>
+      
+      <button id="th23_button" class="grid-item" type="button">B</button>
+      <div id="th23_label" class="grid-item"></div>
+      <div id="th23_slider" class="grid-item"></div>
+      <div id="th23_inputs" class="grid-item"></div>
+      
+      <button id="th13_button" class="grid-item" type="button">B</button>
+      <div id="th13_label" class="grid-item"></div>
+      <div id="th13_slider" class="grid-item"></div>
+      <div id="th13_inputs" class="grid-item"></div>
+      
+      <button id="Dm21sq_button" class="grid-item" type="button">B</button>
+      <div id="Dm21sq_label" class="grid-item"></div>
+      <div id="Dm21sq_slider" class="grid-item"></div>
+      <div id="Dm21sq_inputs" class="grid-item"></div>
+      
+      <button id="Dm31sq_button" class="grid-item" type="button">B</button>
+      <div id="Dm31sq_label" class="grid-item"></div>
+      <div id="Dm31sq_slider" class="grid-item"></div>
+      <div id="Dm31sq_inputs" class="grid-item"></div>
+      
+      <button id="dCP_button" class="grid-item" type="button">B</button>
+      <div id="dCP_label" class="grid-item"></div>
+      <div id="dCP_slider" class="grid-item"></div>
+      <div id="dCP_inputs" class="grid-item"></div>
+      
     </div>
     <div id="buttond">
       <button id="downloadbutton" type="button">Download CSV</button>
@@ -72,7 +118,6 @@
 
   // Function to update the data in the graph.
   function updateGraph(id = "") {
-    console.log("updating");
     // Check if the new parameters are different from those already drawn.
     // If they're not equal, set them to be equal and proceed with processing.
     if (_.isEqual(pars, drawnPars)) {
@@ -87,7 +132,7 @@
     if(rangekeys.length != 1) return;
     const thisArrID = rangekeys[0];
     let thisArr = pars[thisArrID].val;
-    
+
     // Changed/range variable is a mixing parameter.
     var changedVarIsMixingPar =
       id == "th12" ||
@@ -155,19 +200,19 @@
   // Set up control panel.
   const controlp = document.getElementById("controlp");
   var sliders = [];
-  sliders.push(addRow(controlp, "nsteps", pars.nsteps));
-  sliders.push(addRow(controlp, "nu", pars.nu));
-  sliders.push(addRow(controlp, "L", pars.L));
-  sliders.push(addRow(controlp, "E", pars.E));
-  // sliders.push(addRow(controlp, "rho", pars.rho);
-  sliders.push(addRow(controlp, "th12", pars.th12));
-  sliders.push(addRow(controlp, "th23", pars.th23));
-  sliders.push(addRow(controlp, "th13", pars.th13));
-  sliders.push(addRow(controlp, "Dm21sq", pars.Dm21sq));
-  sliders.push(addRow(controlp, "Dm31sq", pars.Dm31sq));
-  sliders.push(addRow(controlp, "dCP", pars.dCP));
+  sliders.push(addRow("nsteps", pars.nsteps));
+  sliders.push(addRow("nu", pars.nu));
+  sliders.push(addRow("L", pars.L));
+  sliders.push(addRow("E", pars.E));
+  // sliders.push(addRow("rho", pars.rho);
+  sliders.push(addRow("th12", pars.th12));
+  sliders.push(addRow("th23", pars.th23));
+  sliders.push(addRow("th13", pars.th13));
+  sliders.push(addRow("Dm21sq", pars.Dm21sq));
+  sliders.push(addRow("Dm31sq", pars.Dm31sq));
+  sliders.push(addRow("dCP", pars.dCP));
   // Edit the nu slider to have step 1, for now.
-  nusliderd = document.getElementById("nu");
+  nusliderd = document.getElementById("nu_slider");
   nusliderd.noUiSlider.updateOptions({ step: 1 });
 
   var updateSliders = true; // Update guard.
@@ -183,11 +228,12 @@
         if (!updateSliders) return;
         // Convert slider value(s) to numbers.
         var vals = valuestrings.map(Number);
+        const key = slider.id.substr(0, slider.id.indexOf("_"));
 
         // Slider snapping.
         vals.forEach(function (v, i) {
-          for (var si = 0; si < pars[slider.id].snaps.length; ++si) {
-            const snapval = pars[slider.id].snaps[si];
+          for (var si = 0; si < pars[key].snaps.length; ++si) {
+            const snapval = pars[key].snaps[si];
             if (math.abs(v - snapval) < snaprange) {
               vals[i] = snapval;
               var tmpvals = [null, null];
@@ -202,10 +248,10 @@
 
         // Change parameter map to reflect slider.
         vals.length == 1
-          ? (pars[slider.id].val = vals[0])
-          : (pars[slider.id].val = vals);
+          ? (pars[key].val = vals[0])
+          : (pars[key].val = vals);
 
-        updateGraph(slider.id);
+        updateGraph(key);
       });
     });
   }
