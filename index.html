@@ -9,6 +9,7 @@
     <script src="plot.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://unpkg.com/mathjs@7.2.0/dist/math.min.js"></script>
+    <script src="lodash.min.js"></script>
   </head>
   <body>
     <div id="plotlyplot"></div>
@@ -49,7 +50,7 @@
 
   // Second parameter map to avoid double updating on same parameters.
   // (Nu set to invalid value for first update.)
-  var drawnPars = makeParMap();
+  var drawnPars = JSON.parse(JSON.stringify(pars));
   drawnPars["nu"] = -1;
 
   // Arrays to store oscillation results.
@@ -71,29 +72,22 @@
 
   // Function to update the data in the graph.
   function updateGraph(id = "") {
+    console.log("updating");
     // Check if the new parameters are different from those already drawn.
-    // If they're not equal, say so and immediately set them to be equal.
-    if (mapCheckAndSetEqual(pars, drawnPars)) {
+    // If they're not equal, set them to be equal and proceed with processing.
+    if (_.isEqual(pars, drawnPars)) {
       return;
+    } else {
+      drawnPars = JSON.parse(JSON.stringify(pars));
     }
 
     // Find the array in the parameter map. Needs one guaranteed array in pars.
-    let thisArrID = "invalid";
-    let thisArr = [0, 0];
-    for (var [key, par] of Object.entries(pars)) {
-      if (Array.isArray(par.val)) {
-        // If multiple ranges, don't update.
-        if (thisArrID != "invalid") {
-          return;
-        }
-        thisArrID = key;
-        thisArr = par.val;
-      }
-    }
-    // If no array found in parameter map, do nothing.
-    if (thisArrID == "invalid") {
-      return;
-    }
+    const rangekeys = Object.keys(pars).filter(key => Array.isArray(pars[key].val));
+    // If more than one or no arrays found in parameter map, do nothing.
+    if(rangekeys.length != 1) return;
+    const thisArrID = rangekeys[0];
+    let thisArr = pars[thisArrID].val;
+    
     // Changed/range variable is a mixing parameter.
     var changedVarIsMixingPar =
       id == "th12" ||
@@ -129,7 +123,7 @@
 
     // Use a temporary non-range parameter map to get oscillation results.
     let tmppars = JSON.parse(JSON.stringify(pars));
-    for(let x of xValues) {
+    for (let x of xValues) {
       tmppars[thisArrID].val = x;
       if (rangeVarIsMixingPar) {
         mat.update(tmppars);
@@ -178,7 +172,7 @@
 
   var updateSliders = true; // Update guard.
   const snapfrac = 0.03; // Snap range as fraction of slider range.
-  function addListeners(slider_arr) {
+  function addListeners(slider_arr, id = "") {
     // Check for changes in sliders. Change parameters
     slider_arr.forEach(function (slider) {
       // Determine snap range in value units.
@@ -224,8 +218,8 @@
     var bd = document.getElementById(id + "_button");
     bd.addEventListener("click", function () {
       makeRange(sliders, id);
-      addListeners(sliders);
-      if(ptype == "Linear") {
+      addListeners(sliders, id);
+      if (ptype == "Linear") {
         Plotly.relayout("plotlyplot", {
           "xaxis.title.text": pars[id].label,
         });
