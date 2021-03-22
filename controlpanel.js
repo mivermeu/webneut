@@ -1,4 +1,12 @@
 function addRow(id, pars) {
+  // Button.
+  let buttond = document.getElementById(id+"_button");
+  buttond.innerHTML = "Make\nrange";
+  // If pars designates this value as a range, disable range button.
+  if(Array.isArray(pars.val)) {
+    buttond.disabled = true;
+  }
+
   // Label.
   let labeld = document.getElementById(id+"_label");
   labeld.innerHTML = pars.label;
@@ -70,7 +78,8 @@ function createInput(sliderd) {
     inputs.appendChild(thisinput);
   });
   // Add input fields to span in grid cell.
-  inputs.id = sliderd.id.substr(0, sliderd.id.indexOf("_")) + "_input";
+  inputs.id = sliderd.id.substr(0, sliderd.id.indexOf("_")) + "_inputs";
+  inputs.className += "slider-inputs";
 
   return inputs;
 }
@@ -87,9 +96,10 @@ function makeRange(sliders, id) {
     ops.start = slider.noUiSlider.get()[1];
     slider.noUiSlider.destroy();
     noUiSlider.create(slider, ops);
-    // Remake input fields.
+    // Remake input fields and enable button.
     let inputs = createInput(slider);
-    document.getElementById(key + "_input").replaceWith(inputs);
+    document.getElementById(key + "_inputs").replaceWith(inputs);
+    document.getElementById(key + "_button").disabled = false;
   });
   // Find the new range slider and remake it with two handles.
   const newrangeslider = sliders.find((slider) => slider.id == id+"_slider");
@@ -102,5 +112,6 @@ function makeRange(sliders, id) {
   noUiSlider.create(newrangeslider, ops);
   // Remake input fields.
   let input = createInput(newrangeslider);
-  document.getElementById(id + "_input").replaceWith(input);
+  document.getElementById(id + "_inputs").replaceWith(input);
+  document.getElementById(id + "_button").disabled = true;
 }

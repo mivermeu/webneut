@@ -56,6 +56,11 @@ function createPlot(div, ptype, pars, xval, yval) {
         title: "P(\u03BD\u2192\u03BD<sub>x</sub>)",
       },
       showlegend: true,
+      margin: {
+        b: 60,
+        t: 20,
+        pad: 5
+      }
     };
 
     Plotly.newPlot(div, lintraces(xval, yval), linlayout);
@@ -63,7 +68,7 @@ function createPlot(div, ptype, pars, xval, yval) {
     const ternarytrace = {
       type: "scatterternary",
       mode: "lines",
-      // It would be extremely nice to have a colour gradient in this line, but this is currently impossible.
+      // It would be extremely nice to have a colour gradient in this line, but this is currently impossible in Plotly.
       // line: {
       //   color: xval
       // },

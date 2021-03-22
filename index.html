@@ -25,58 +25,81 @@
       />
       <label for="plottype2">Ternary</label>
     </div>
-    <div id="controlp" class="controlpanel">
-      <button id="nsteps_button" class="grid-item" type="button">B</button>
-      <div id="nsteps_label" class="grid-item"></div>
-      <div id="nsteps_slider" class="grid-item"></div>
-      <div id="nsteps_inputs" class="grid-item"></div>
-      
-      <button id="nu_button" class="grid-item" type="button">B</button>
-      <div id="nu_label" class="grid-item"></div>
-      <div id="nu_slider" class="grid-item"></div>
-      <div id="nu_inputs" class="grid-item"></div>
-      
-      <button id="L_button" class="grid-item" type="button">B</button>
-      <div id="L_label" class="grid-item"></div>
-      <div id="L_slider" class="grid-item"></div>
-      <div id="L_inputs" class="grid-item"></div>
-      
-      <button id="E_button" class="grid-item" type="button">B</button>
-      <div id="E_label" class="grid-item"></div>
-      <div id="E_slider" class="grid-item"></div>
-      <div id="E_inputs" class="grid-item"></div>
-      
-      <button id="th12_button" class="grid-item" type="button">B</button>
-      <div id="th12_label" class="grid-item"></div>
-      <div id="th12_slider" class="grid-item"></div>
-      <div id="th12_inputs" class="grid-item"></div>
-      
-      <button id="th23_button" class="grid-item" type="button">B</button>
-      <div id="th23_label" class="grid-item"></div>
-      <div id="th23_slider" class="grid-item"></div>
-      <div id="th23_inputs" class="grid-item"></div>
-      
-      <button id="th13_button" class="grid-item" type="button">B</button>
-      <div id="th13_label" class="grid-item"></div>
-      <div id="th13_slider" class="grid-item"></div>
-      <div id="th13_inputs" class="grid-item"></div>
-      
-      <button id="Dm21sq_button" class="grid-item" type="button">B</button>
-      <div id="Dm21sq_label" class="grid-item"></div>
-      <div id="Dm21sq_slider" class="grid-item"></div>
-      <div id="Dm21sq_inputs" class="grid-item"></div>
-      
-      <button id="Dm31sq_button" class="grid-item" type="button">B</button>
-      <div id="Dm31sq_label" class="grid-item"></div>
-      <div id="Dm31sq_slider" class="grid-item"></div>
-      <div id="Dm31sq_inputs" class="grid-item"></div>
-      
-      <button id="dCP_button" class="grid-item" type="button">B</button>
-      <div id="dCP_label" class="grid-item"></div>
-      <div id="dCP_slider" class="grid-item"></div>
-      <div id="dCP_inputs" class="grid-item"></div>
-      
-    </div>
+    <div id="controlpanel-container">
+      <div id="experiment-controlpanel" class="controlpanel">
+        <div class="slider-assembly">
+          <button id="nsteps_button" class="slider-button" type="button"></button>
+          <div id="nsteps_label" class="slider-label"></div>
+          <div id="nsteps_slider" class="slider"></div>
+          <div id="nsteps_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="nu_button" class="slider-button" type="button"></button>
+          <div id="nu_label" class="slider-label"></div>
+          <div id="nu_slider" class="slider"></div>
+          <div id="nu_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="L_button" class="slider-button" type="button"></button>
+          <div id="L_label" class="slider-label"></div>
+          <div id="L_slider" class="slider"></div>
+          <div id="L_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="E_button" class="slider-button" type="button"></button>
+          <div id="E_label" class="slider-label"></div>
+          <div id="E_slider" class="slider"></div>
+          <div id="E_inputs" class="slider-inputs"></div>
+        </div>
+      </div> <!-- End experimental parameters control panel. -->
+
+      <div id="mixing-controlpanel" class="controlpanel">
+        <div class="slider-assembly">
+          <button id="th12_button" class="slider-button" type="button"></button>
+          <div id="th12_label" class="slider-label"></div>
+          <div id="th12_slider" class="slider"></div>
+          <div id="th12_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="th23_button" class="slider-button" type="button"></button>
+          <div id="th23_label" class="slider-label"></div>
+          <div id="th23_slider" class="slider"></div>
+          <div id="th23_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="th13_button" class="slider-button" type="button"></button>
+          <div id="th13_label" class="slider-label"></div>
+          <div id="th13_slider" class="slider"></div>
+          <div id="th13_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="Dm21sq_button" class="slider-button" type="button"></button>
+          <div id="Dm21sq_label" class="slider-label"></div>
+          <div id="Dm21sq_slider" class="slider"></div>
+          <div id="Dm21sq_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="Dm31sq_button" class="slider-button" type="button"></button>
+          <div id="Dm31sq_label" class="slider-label"></div>
+          <div id="Dm31sq_slider" class="slider"></div>
+          <div id="Dm31sq_inputs" class="slider-inputs"></div>
+        </div>
+
+        <div class="slider-assembly">
+          <button id="dCP_button" class="slider-button" type="button"></button>
+          <div id="dCP_label" class="slider-label"></div>
+          <div id="dCP_slider" class="slider"></div>
+          <div id="dCP_inputs" class="slider-inputs"></div>
+        </div>
+      </div> <!-- End mixing parameters control panel. -->
+    </div> <!-- End control panel container. -->
     <div id="buttond">
       <button id="downloadbutton" type="button">Download CSV</button>
     </div>
@@ -127,9 +150,11 @@
     }
 
     // Find the array in the parameter map. Needs one guaranteed array in pars.
-    const rangekeys = Object.keys(pars).filter(key => Array.isArray(pars[key].val));
+    const rangekeys = Object.keys(pars).filter((key) =>
+      Array.isArray(pars[key].val)
+    );
     // If more than one or no arrays found in parameter map, do nothing.
-    if(rangekeys.length != 1) return;
+    if (rangekeys.length != 1) return;
     const thisArrID = rangekeys[0];
     let thisArr = pars[thisArrID].val;
 
@@ -247,9 +272,7 @@
         });
 
         // Change parameter map to reflect slider.
-        vals.length == 1
-          ? (pars[key].val = vals[0])
-          : (pars[key].val = vals);
+        vals.length == 1 ? (pars[key].val = vals[0]) : (pars[key].val = vals);
 
         updateGraph(key);
       });
