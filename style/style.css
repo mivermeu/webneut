@@ -32,6 +32,18 @@ body {
   background-color: white;
 }
 
+#plot-controlpanel {
+  grid-area: 1/1/1/1;
+}
+
+#experiment-controlpanel {
+  grid-area: 2/1/2/1;
+}
+
+#mixing-controlpanel {
+  grid-area: 1/2/3/2;
+}
+
 .controlpanel {
   display: grid;
   grid-template-columns: 1fr;
@@ -40,18 +52,13 @@ body {
 }
 
 .slider-assembly {
-  /* margin: auto; */
-
   display: grid;
   gap: 1em;
-  grid-template-columns: 50px minmax(200px, 50%) auto;
+  grid-template-columns: auto minmax(200px, 50%) auto;
   align-items: stretch;
 
   justify-content: center;
   align-content: center;
-  /* grid-auto-flow: column; */
-
-  /* border: 1px solid #f00; */
 }
 
 .slider-button {

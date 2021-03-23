@@ -1,7 +1,7 @@
 function makeParMap() {
   return {
     nsteps: {
-      val: 600,
+      val: 500,
       label: "Number of points",
       snaps: [],
       precision: 0,
@@ -101,8 +101,7 @@ class Matrices {
     this.c23 = math.cos(pars.th23.val);
     this.c13 = math.cos(pars.th13.val);
 
-    this.ch = 1;
-    if (pars.anti.val) this.ch = -1;
+    this.ch = pars.anti.val;
 
     this.edcp = math.exp(math.complex(0, this.ch * pars.dCP.val));
     this.emdcp = math.pow(this.edcp, -1);
@@ -139,7 +138,7 @@ class Matrices {
     const Gf = 4.54164e-37; // Reduced Fermi constant * (c*hbar)^2 in m^2.
     const Ne = pars.rho.val / 1.672e-27 / 2; // Electron number density in m^-3.
     this.V = math.matrix([
-      [pars.anti.val * math.sqrt(2) * Gf * Ne * 1e3, 0, 0], // Multiply and convert to km^-1.
+      [pars.anti.val * 1.41421356237 * Gf * Ne * 1e3, 0, 0], // Multiply and convert to km^-1. (1.41... = sqrt(2))
       [0, 0, 0],
       [0, 0, 0],
     ]);

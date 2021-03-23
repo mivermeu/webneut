@@ -4,29 +4,30 @@
     <link href="style/style.css" rel="stylesheet" />
     <link href="style/nouislider.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.0/nouislider.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="https://unpkg.com/mathjs@7.2.0/dist/math.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="script/Oscillator.js"></script>
     <script src="script/controlpanel.js"></script>
     <script src="script/plot.js"></script>
-    <script src="script/lodash.min.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://unpkg.com/mathjs@7.2.0/dist/math.min.js"></script>
   </head>
   <body>
     <div id="plotlyplot"></div>
-    <div id="plottype" class="radiobutton">
-      <input
-        type="radio"
-        id="plottype1"
-        name="plottype"
-        value="Linear"
-        checked="true"
-      />
-      <label for="plottype1">Linear</label>
-      <input type="radio" id="plottype2" name="plottype" value="Ternary" />
-      <label for="plottype2">Ternary</label>
-    </div>
     <div id="controlpanel-container">
-      <div id="experiment-controlpanel" class="controlpanel">
+      <div id="plot-controlpanel" class="controlpanel">
+        <div id="plottype" class="radiobutton">
+          <input
+            type="radio"
+            id="plottype1"
+            name="plottype"
+            value="Linear"
+            checked="true"
+          />
+          <label for="plottype1">Linear</label>
+          <input type="radio" id="plottype2" name="plottype" value="Ternary" />
+          <label for="plottype2">Ternary</label>
+        </div>
+
         <div class="slider-assembly">
           <button
             id="nsteps_button"
@@ -38,17 +39,36 @@
           <div id="nsteps_slider" class="slider"></div>
           <div id="nsteps_inputs" class="slider-inputs"></div>
         </div>
+      </div>
+      <!-- End experimental parameters control panel. -->
 
-        <div class="slider-assembly">
-          <button
-            id="nu_button"
-            class="slider-button"
-            type="button"
-            style="display: none"
-          ></button>
-          <div id="nu_label" class="slider-label"></div>
-          <div id="nu_slider" class="slider"></div>
-          <div id="nu_inputs" class="slider-inputs"></div>
+      <div id="experiment-controlpanel" class="controlpanel">
+        <div id="nutype" class="radiobutton">
+          <input type="radio" id="nutype1" name="nutype" value="0" />
+          <label id="nutype1-label" for="nutype1">&nu;<sub>e</sub></label>
+          <input
+            type="radio"
+            id="nutype2"
+            name="nutype"
+            value="1"
+            checked="true"
+          />
+          <label id="nutype2-label" for="nutype2">&nu;<sub>&mu;</sub></label>
+          <input type="radio" id="nutype3" name="nutype" value="2" />
+          <label id="nutype3-label" for="nutype3">&nu;<sub>&tau;</sub></label>
+        </div>
+
+        <div id="chirality" class="radiobutton">
+          <input
+            type="radio"
+            id="chirality1"
+            name="chirality"
+            value="1"
+            checked="true"
+          />
+          <label for="chirality1">Neutrino</label>
+          <input type="radio" id="chirality2" name="chirality" value="-1" />
+          <label for="chirality2">Antineutrino</label>
         </div>
 
         <div class="slider-assembly">
@@ -135,32 +155,52 @@
 </html>
 
 <script>
-  // // Testing some things.
-  // var testslider = document.getElementById("test_slider");
-  // createSlider(testslider, [0, 10], 2, 0, []);
-  // let testinputs = createInput(testslider);
-  // document.getElementById("test_inputs").appendChild(testinputs);
 
   // Get neutrino oscillation parameter objects.
-  var pars = makeParMap();
-  var mat = new Matrices(pars);
+  let pars = makeParMap();
+  let mat = new Matrices(pars);
 
   // Second parameter map to avoid double updating on same parameters.
   // (Nu set to invalid value for first update.)
-  var drawnPars = JSON.parse(JSON.stringify(pars));
+  let drawnPars = _.cloneDeep(pars);
   drawnPars["nu"] = -1;
 
   // Arrays to store oscillation results.
-  var xValues = [];
-  var yValues = [];
+  let xValues = [];
+  let yValues = [];
 
-  // Determine type of plot from radio buttons.
-  var buttons = document.getElementsByName("plottype");
-  var ptype = document.querySelector('input[name="plottype"]:checked').value;
-  for (var i = 0; i < buttons.length; ++i) {
-    buttons[i].onclick = function () {
+  // Handle input from radio buttons.
+  // Plot type.
+  let ptbuttons = document.getElementsByName("plottype");
+  let ptype = document.querySelector('input[name="plottype"]:checked').value;
+  for (let i = 0; i < ptbuttons.length; ++i) {
+    ptbuttons[i].onclick = function () {
       ptype = this.value;
       createPlot("plotlyplot", ptype, pars, xValues, yValues);
+    };
+  }
+  // Neutrino flavour.
+  let ntbuttons = document.getElementsByName("nutype");
+  for (let i = 0; i < ntbuttons.length; ++i) {
+    ntbuttons[i].onclick = function () {
+      pars.nu.val = this.value;
+      updateGraph("nu");
+    };
+  }
+  // Neutrino chirality.
+  let chbuttons = document.getElementsByName("chirality");
+  for (let i = 0; i < chbuttons.length; ++i) {
+    chbuttons[i].onclick = function () {
+      pars.anti.val = this.value;
+      // Recreate plot to update axis and trace labels.
+      createPlot("plotlyplot", ptype, pars, xValues, yValues);
+      // Recreate radio button labels.
+      const nustring = pars.anti.val > 0 ? "&nu;" : "&nu;&#773;";
+      document.getElementById("nutype1-label").innerHTML = nustring+"<sub>e</sub>";
+      document.getElementById("nutype2-label").innerHTML = nustring+"<sub>&mu;</sub>";
+      document.getElementById("nutype3-label").innerHTML = nustring+"<sub>&tau;</sub>";
+
+      updateGraph("anti");
     };
   }
 
@@ -178,22 +218,9 @@
     let thisArr = pars[thisArrID].val;
 
     // Changed/range variable is a mixing parameter.
-    const changedVarIsMixingPar =
-      id == "th12" ||
-      id == "th23" ||
-      id == "th13" ||
-      id == "Dm21sq" ||
-      id == "Dm31sq" ||
-      id == "dCP" ||
-      id == "rho";
-    const rangeVarIsMixingPar =
-      thisArrID == "th12" ||
-      thisArrID == "th23" ||
-      thisArrID == "th13" ||
-      thisArrID == "Dm21sq" ||
-      thisArrID == "Dm31sq" ||
-      thisArrID == "dCP" ||
-      thisArrID == "rho";
+    const mixingpars = ["anti", "th12", "th23", "th13", "Dm21sq", "Dm31sq", "dCP", "rho"];
+    const changedVarIsMixingPar = mixingpars.indexOf(id) != undefined;
+    const rangeVarIsMixingPar = mixingpars.indexOf(thisArrID) != undefined;
     // Only update mixing matrices once if changed variable is mixing parameter.
     if (changedVarIsMixingPar && !rangeVarIsMixingPar) {
       mat = new Matrices(pars);
@@ -211,7 +238,7 @@
     let yv = [];
 
     // Use a temporary non-range parameter map to get oscillation results.
-    let tmppars = JSON.parse(JSON.stringify(pars));
+    let tmppars = _.cloneDeep(pars);
     for (let x of xv) {
       tmppars[thisArrID].val = x;
       if (rangeVarIsMixingPar) {
@@ -231,7 +258,7 @@
     if (_.isEqual(pars, drawnPars)) {
       return;
     } else {
-      drawnPars = JSON.parse(JSON.stringify(pars));
+      drawnPars = _.cloneDeep(pars);
     }
 
     // Get new data.
@@ -261,31 +288,13 @@
     }
   }
 
-  // Set up control panel.
-  const controlp = document.getElementById("controlp");
-  var sliders = [];
-  sliders.push(addRow("nsteps", pars.nsteps));
-  sliders.push(addRow("nu", pars.nu));
-  sliders.push(addRow("L", pars.L));
-  sliders.push(addRow("E", pars.E));
-  sliders.push(addRow("rho", pars.rho));
-  sliders.push(addRow("th12", pars.th12));
-  sliders.push(addRow("th23", pars.th23));
-  sliders.push(addRow("th13", pars.th13));
-  sliders.push(addRow("Dm21sq", pars.Dm21sq));
-  sliders.push(addRow("Dm31sq", pars.Dm31sq));
-  sliders.push(addRow("dCP", pars.dCP));
-  // Edit the nu slider to have step 1, for now.
-  nusliderd = document.getElementById("nu_slider");
-  nusliderd.noUiSlider.updateOptions({ step: 1 });
-
   var updateSliders = true; // Update guard.
-  const snapfrac = 0.03; // Snap range as fraction of slider range.
   function addListeners(slider_arr, id = "") {
     // Check for changes in sliders. Change parameters
     slider_arr.forEach(function (slider) {
       // Determine snap range in value units.
       const srange = slider.noUiSlider.options.range;
+      const snapfrac = 0.02; // Snap range as fraction of slider range.
       const snaprange = (srange["max"] - srange["min"]) * snapfrac;
 
       slider.noUiSlider.on("update", function (valuestrings) {
@@ -296,8 +305,7 @@
 
         // Slider snapping.
         vals.forEach(function (v, i) {
-          for (var si = 0; si < pars[key].snaps.length; ++si) {
-            const snapval = pars[key].snaps[si];
+          pars[key].snaps.forEach(function (snapval) {
             if (math.abs(v - snapval) < snaprange) {
               vals[i] = snapval;
               var tmpvals = [null, null];
@@ -307,7 +315,7 @@
               slider.noUiSlider.set(tmpvals, false, false);
               updateSliders = true;
             }
-          }
+          });
         });
 
         // Change parameter map to reflect slider.
@@ -318,10 +326,9 @@
     });
   }
 
-  addListeners(sliders);
-
-  // Add listeners for buttons.
+  // Add listeners for buttons and set up sliders.
   var ids = [
+    "nsteps",
     "L",
     "E",
     "rho",
@@ -332,7 +339,13 @@
     "Dm31sq",
     "dCP",
   ];
+  // Set up control panel.
+  const controlp = document.getElementById("controlp");
+  var sliders = [];
   ids.forEach(function (id) {
+    // Set up slider in control panel.
+    sliders.push(addRow(id, pars[id]));
+    // Add listeners for buttons.
     var bd = document.getElementById(id + "_button");
     bd.addEventListener("click", function () {
       makeRange(sliders, id);
@@ -344,6 +357,8 @@
       }
     });
   });
+
+  addListeners(sliders);
 
   // Function to convert the nu arrays to a csv format.
   function dataToCsv(x, y, p) {

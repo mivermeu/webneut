@@ -1,4 +1,4 @@
-function lintraces(xvals, yvals) {
+function lintraces(pars, xvals, yvals) {
   let lintrace = (xv, yv, thisname, thiscolor) => ({
     mode: "lines",
     name: thisname,
@@ -9,10 +9,13 @@ function lintraces(xvals, yvals) {
     y: yv,
   });
 
+  // Handle antineutrinos.
+  const nustring = pars.anti.val > 0 ? "\u03BD" : "\u03BD&#773;";
+
   return [
-    lintrace(xvals, yvals[0], "\u03BD<sub>e</sub>", "green"),
-    lintrace(xvals, yvals[1], "\u03BD<sub>\u03BC</sub>", "blue"),
-    lintrace(xvals, yvals[2], "\u03BD<sub>\u03C4</sub>", "red"),
+    lintrace(xvals, yvals[0], nustring + "<sub>e</sub>", "green"),
+    lintrace(xvals, yvals[1], nustring + "<sub>\u03BC</sub>", "blue"),
+    lintrace(xvals, yvals[2], nustring + "<sub>\u03C4</sub>", "red"),
   ];
 }
 
@@ -31,11 +34,13 @@ function makeTernAxis(title, tickangle) {
 
 // Function to create plot and change between plot types.
 function createPlot(div, ptype, pars, xval, yval) {
+  // Handle antineutrinos.
+  const nustring = pars.anti.val > 0 ? "\u03BD" : "\u03BD&#773;";
   if (ptype == "Linear") {
     // Find range variable for label.
     let rangeID = "";
-    for(let [key,par] of Object.entries(pars)) {
-      if(Array.isArray(par.val)) {
+    for (let [key, par] of Object.entries(pars)) {
+      if (Array.isArray(par.val)) {
         rangeID = key;
         break;
       }
@@ -53,17 +58,17 @@ function createPlot(div, ptype, pars, xval, yval) {
         },
       },
       yaxis: {
-        title: "P(\u03BD\u2192\u03BD<sub>x</sub>)",
+        title: "P(" + nustring + "\u2192" + nustring + "<sub>x</sub>)",
       },
       showlegend: true,
       margin: {
         b: 60,
         t: 20,
-        pad: 5
-      }
+        pad: 5,
+      },
     };
 
-    Plotly.newPlot(div, lintraces(xval, yval), linlayout);
+    Plotly.newPlot(div, lintraces(pars, xval, yval), linlayout);
   } else if (ptype == "Ternary") {
     const ternarytrace = {
       type: "scatterternary",
@@ -81,9 +86,9 @@ function createPlot(div, ptype, pars, xval, yval) {
     const ternlayout = {
       ternary: {
         sum: 1,
-        aaxis: makeTernAxis("\u03BD<sub>e</sub>", 0),
-        baxis: makeTernAxis("\u03BD<sub>\u03BC</sub>", 45),
-        caxis: makeTernAxis("\u03BD<sub>\u03C4</sub>", -45),
+        aaxis: makeTernAxis(nustring + "<sub>e</sub>", 0),
+        baxis: makeTernAxis(nustring + "<sub>\u03BC</sub>", 45),
+        caxis: makeTernAxis(nustring + "<sub>\u03C4</sub>", -45),
       },
       margin: {
         l: 40,
