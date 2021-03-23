@@ -15,7 +15,7 @@
     <div id="plotlyplot"></div>
     <div id="controlpanel-container">
       <div id="plot-controlpanel" class="controlpanel">
-        <div id="plottype" class="radiobutton">
+        <div id="plottype-container" class="radiobutton">
           <input
             type="radio"
             id="plottype1"
@@ -26,6 +26,11 @@
           <label for="plottype1">Linear</label>
           <input type="radio" id="plottype2" name="plottype" value="Ternary" />
           <label for="plottype2">Ternary</label>
+        </div>
+
+        <div id="snap-checkbox-container" class="checkbox">
+          <input type="checkbox" id="snap-checkbox" name="snap-option" checked="true">
+          <label for="snap-option">Sliders snap to values of interest</label>
         </div>
 
         <div class="slider-assembly">
@@ -43,7 +48,7 @@
       <!-- End experimental parameters control panel. -->
 
       <div id="experiment-controlpanel" class="controlpanel">
-        <div id="nutype" class="radiobutton">
+        <div id="nutype-container" class="radiobutton">
           <input type="radio" id="nutype1" name="nutype" value="0" />
           <label id="nutype1-label" for="nutype1">&nu;<sub>e</sub></label>
           <input
@@ -163,7 +168,7 @@
   // Second parameter map to avoid double updating on same parameters.
   // (Nu set to invalid value for first update.)
   let drawnPars = _.cloneDeep(pars);
-  drawnPars["nu"] = -1;
+  drawnPars.nu.val = -1;
 
   // Arrays to store oscillation results.
   let xValues = [];
@@ -171,13 +176,22 @@
 
   // Handle input from radio buttons.
   // Plot type.
-  let ptbuttons = document.getElementsByName("plottype");
+  const ptbuttons = document.getElementsByName("plottype");
   let ptype = document.querySelector('input[name="plottype"]:checked').value;
   for (let i = 0; i < ptbuttons.length; ++i) {
     ptbuttons[i].onclick = function () {
       ptype = this.value;
       createPlot("plotlyplot", ptype, pars, xValues, yValues);
+      // Force a redraw in the new plot even though the data hasn't changed.
+      drawnPars.nu.val = -1;
+      updateGraph(xValues, yValues);
     };
+  }
+  // Snap checkbox.
+  const snapbox = document.getElementsByName("snap-option");
+  let snap = snapbox[0].checked;
+  snapbox[0].onclick = function() {
+    snap = this.checked;
   }
   // Neutrino flavour.
   let ntbuttons = document.getElementsByName("nutype");
@@ -186,7 +200,7 @@
       pars.nu.val = this.value;
       // Recreate plot to update axis label.
       createPlot("plotlyplot", ptype, pars, xValues, yValues);
-      updateGraph("nu");
+      updateGraph(xValues, yValues, "nu");
     };
   }
   // Neutrino chirality.
@@ -202,7 +216,7 @@
       document.getElementById("nutype2-label").innerHTML = nustring+"<sub>&mu;</sub>";
       document.getElementById("nutype3-label").innerHTML = nustring+"<sub>&tau;</sub>";
 
-      updateGraph("anti");
+      updateGraph(xValues, yValues, "anti");
     };
   }
 
@@ -254,7 +268,7 @@
   }
 
   // Function to update the data in the graph.
-  function updateGraph(id = "") {
+  function updateGraph(xValues, yValues, id = "") {
     // Check if the new parameters are different from those already drawn.
     // If they're not equal, set them to be equal and proceed with processing.
     if (_.isEqual(pars, drawnPars)) {
@@ -290,40 +304,42 @@
     }
   }
 
-  var updateSliders = true; // Update guard.
   function addListeners(slider_arr, id = "") {
     // Check for changes in sliders. Change parameters
     slider_arr.forEach(function (slider) {
-      // Determine snap range in value units.
-      const srange = slider.noUiSlider.options.range;
-      const snapfrac = 0.02; // Snap range as fraction of slider range.
-      const snaprange = (srange["max"] - srange["min"]) * snapfrac;
-
+      // Update parameter values when slider value changes.
       slider.noUiSlider.on("update", function (valuestrings) {
-        if (!updateSliders) return;
         // Convert slider value(s) to numbers.
-        var vals = valuestrings.map(Number);
+        const vals = valuestrings.map(Number);
         const key = slider.id.substr(0, slider.id.indexOf("_"));
-
-        // Slider snapping.
-        vals.forEach(function (v, i) {
-          pars[key].snaps.forEach(function (snapval) {
-            if (math.abs(v - snapval) < snaprange) {
-              vals[i] = snapval;
-              var tmpvals = [null, null];
-              tmpvals[i] = snapval;
-              // Use update guard to avoid update on set causing infinite loop.
-              updateSliders = false;
-              slider.noUiSlider.set(tmpvals, false, false);
-              updateSliders = true;
-            }
-          });
-        });
 
         // Change parameter map to reflect slider.
         vals.length == 1 ? (pars[key].val = vals[0]) : (pars[key].val = vals);
 
-        updateGraph(key);
+        updateGraph(xValues, yValues, key);
+      });
+
+      // Slider snapping.
+      slider.noUiSlider.on("slide", function(valuestrings) {
+        // Determine snap range in value units.
+        const srange = slider.noUiSlider.options.range;
+        const snapfrac = 0.02; // Snap range as fraction of slider range.
+        const snaprange = (srange["max"] - srange["min"]) * snapfrac;
+        // Convert slider value(s) to numbers.
+        const vals = valuestrings.map(Number);
+        const key = slider.id.substr(0, slider.id.indexOf("_"));
+
+        vals.forEach(function (v, i) {
+          pars[key].snaps.forEach(function (snapval) {
+            if (math.abs(v - snapval) < snaprange && snap) {
+              vals[i] = snapval;
+              var tmpvals = [null, null];
+              tmpvals[i] = snapval;
+              // Use update guard to avoid update on set causing infinite loop.
+              slider.noUiSlider.set(tmpvals, false, false);
+            }
+          });
+        });
       });
     });
   }
@@ -347,7 +363,7 @@
   ids.forEach(function (id) {
     // Set up slider in control panel.
     sliders.push(addRow(id, pars[id]));
-    // Add listeners for buttons.
+    // Add listener for buttons.
     var bd = document.getElementById(id + "_button");
     bd.addEventListener("click", function () {
       makeRange(sliders, id);
@@ -359,7 +375,7 @@
       }
     });
   });
-
+  // Add listeners to sliders.
   addListeners(sliders);
 
   // Function to convert the nu arrays to a csv format.

@@ -16,7 +16,9 @@ body {
   border: 0.1em solid black;
 }
 .radiobutton {
-  background-color: white;
+  padding-left: 20px;
+}
+.checkbox {
   padding-left: 20px;
 }
 
@@ -62,24 +64,20 @@ body {
 }
 
 .slider-button {
-  grid-column: 1;
-  grid-row: 1/3;
+  grid-area: 1/1/3/1;
 }
 
 .slider-label {
-  grid-column: 2;
-  grid-row: 1;
+  grid-area: 1/2/1/2;
 }
 
 .slider {
-  grid-column: 2;
-  grid-row: 2;
+  grid-area: 2/2/2/2;
 }
 
 .slider-inputs {
   display: flex;
   flex-flow: column wrap;
-  grid-column: 3;
-  grid-row: 1/3;
+  grid-area: 1/3/3/3;
   align-self: end;
 }

@@ -157,7 +157,7 @@ class Matrices {
     }
   };
 
-  // Specific update functions to avoid having to recalculate all matrices on every update.
+  // Specific update functions to avoid having to recreate all matrices on every update.
   updateFuncs = function (key, newval) {
     switch (key) {
       case "th12":

@@ -27,7 +27,7 @@ function createSlider(el, slimits, sstart, precision, snaps = []) {
     orientation: "horizontal",
     connect: true,
     animate: false,
-    // behaviour: 'snap',
+    behaviour: 'snap-drag',
     range: {
       min: slimits[0],
       max: slimits[1],
