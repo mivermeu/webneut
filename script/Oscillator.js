@@ -91,15 +91,15 @@ function makeParMap() {
 
 class Matrices {
   constructor(pars) {
-    this.update(pars);
-  }
-  update = function (pars) {
-    this.s12 = math.sin(pars.th12.val);
-    this.s23 = math.sin(pars.th23.val);
-    this.s13 = math.sin(pars.th13.val);
-    this.c12 = math.cos(pars.th12.val);
-    this.c23 = math.cos(pars.th23.val);
-    this.c13 = math.cos(pars.th13.val);
+    // Save a copy of the initial parameter set
+    this.pars = _.cloneDeep(pars);
+
+    const s12 = math.sin(pars.th12.val);
+    const s23 = math.sin(pars.th23.val);
+    const s13 = math.sin(pars.th13.val);
+    const c12 = math.cos(pars.th12.val);
+    const c23 = math.cos(pars.th23.val);
+    const c13 = math.cos(pars.th13.val);
 
     this.ch = pars.anti.val;
 
@@ -109,19 +109,19 @@ class Matrices {
     // Construct oscillation matrix.
     this.U1 = math.matrix([
       [1, 0, 0],
-      [0, this.c23, this.s23],
-      [0, -this.s23, this.c23],
+      [0, c23, s23],
+      [0, -s23, c23],
     ]);
 
     this.U2 = math.matrix([
-      [this.c13, 0, math.multiply(this.s13, this.emdcp)],
+      [c13, 0, math.multiply(s13, this.emdcp)],
       [0, 1, 0],
-      [math.multiply(-this.s13, this.edcp), 0, this.c13],
+      [math.multiply(-s13, this.edcp), 0, c13],
     ]);
 
     this.U3 = math.matrix([
-      [this.c12, this.s12, 0],
-      [-this.s12, this.c12, 0],
+      [c12, s12, 0],
+      [-s12, c12, 0],
       [0, 0, 1],
     ]);
 
@@ -138,10 +138,86 @@ class Matrices {
     const Gf = 4.54164e-37; // Reduced Fermi constant * (c*hbar)^2 in m^2.
     const Ne = pars.rho.val / 1.672e-27 / 2; // Electron number density in m^-3.
     this.V = math.matrix([
-      [pars.anti.val * 1.41421356237 * Gf * Ne * 1e3, 0, 0], // Multiply and convert to km^-1. (1.41... = sqrt(2))
+      [this.ch * 1.41421356237 * Gf * Ne * 1e3, 0, 0], // Multiply and convert to km^-1. (1.41... = sqrt(2))
       [0, 0, 0],
       [0, 0, 0],
     ]);
+  };
+
+  update = function (pars) {
+    // Find all differing keys and update only those parameters that have changed.
+    for (const key in this.pars) {
+      if (
+        this.pars[key].val != pars[key].val &&
+        !Array.isArray(pars[key].val)
+      ) {
+        this.updateFuncs(key, pars[key].val);
+        this.pars[key].val = pars[key].val;
+      }
+    }
+  };
+
+  // Specific update functions to avoid having to recalculate all matrices on every update.
+  updateFuncs = function (key, newval) {
+    switch (key) {
+      case "th12":
+        const s12 = math.sin(newval);
+        const c12 = math.cos(newval);
+        this.U3._data[0][0] = c12;
+        this.U3._data[1][1] = c12;
+        this.U3._data[0][1] = s12;
+        this.U3._data[1][0] = -s12;
+        this.U = math.multiply(this.U1, this.U2, this.U3);
+        this.Ud = math.ctranspose(this.U);
+        break;
+      case "th23":
+        const s23 = math.sin(newval);
+        const c23 = math.cos(newval);
+        this.U1._data[1][1] = c23;
+        this.U1._data[1][2] = s23;
+        this.U1._data[2][2] = c23;
+        this.U1._data[2][1] = -s23;
+        this.U = math.multiply(this.U1, this.U2, this.U3);
+        this.Ud = math.ctranspose(this.U);
+        break;
+      case "th13":
+        const s13 = math.sin(newval);
+        const c13 = math.cos(newval);
+        this.U2._data[0][0] = c13;
+        this.U2._data[2][2] = c13;
+        this.U2._data[0][2] = math.multiply(s13, this.emdcp);
+        this.U2._data[2][0] = math.multiply(-s13, this.edcp);
+        this.U = math.multiply(this.U1, this.U2, this.U3);
+        this.Ud = math.ctranspose(this.U);
+        break;
+      case "Dm21sq":
+        this.H._data[1][1] = newval * 1e-5;
+        break;
+      case "Dm31sq":
+        this.H._data[2][2] = newval * 1e-3;
+        break;
+      case "anti":
+        this.ch = newval;
+        this.updateFuncs("dCP", this.pars.dCP.val);
+        this.updateFuncs("rho", this.pars.rho.val);
+        break;
+      case "dCP":
+        const sin13 = math.sin(this.pars.th13.val);
+        this.edcp = math.exp(math.complex(0, this.ch * newval));
+        this.emdcp = math.pow(this.edcp, -1);
+        this.U2._data[0][2] = math.multiply(sin13, this.emdcp);
+        this.U2._data[2][0] = math.multiply(-sin13, this.edcp);
+        this.U = math.multiply(this.U1, this.U2, this.U3);
+        this.Ud = math.ctranspose(this.U);
+        break;
+      case "rho":
+        const Gf = 4.54164e-37; // Reduced Fermi constant * (c*hbar)^2 in m^2.
+        const Ne = newval / 1.672e-27 / 2; // Electron number density in m^-3.
+        this.V._data[0][0] = this.ch * 1.41421356237 * Gf * Ne * 1e3;
+        break;
+      default:
+        break;
+    }
   };
 }
 
@@ -199,7 +275,6 @@ function transmat(p, m) {
   Vexp._data[2][2] = 1;
   // Slow matrix power. Better than exponential...
   const HUdVUpow = math.pow(math.multiply(Hexp, m.Ud, Vexp, m.U), N);
-  // console.log(HUdVUpow);
   const UHUdnu = math.multiply(m.U, HUdVUpow, m.Ud, nu);
   return math.re(math.dotMultiply(UHUdnu, math.conj(UHUdnu))).valueOf();
 }

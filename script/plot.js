@@ -35,8 +35,11 @@ function makeTernAxis(title, tickangle) {
 // Function to create plot and change between plot types.
 function createPlot(div, ptype, pars, xval, yval) {
   // Handle antineutrinos.
-  const nustring = pars.anti.val > 0 ? "\u03BD" : "\u03BD&#773;";
+  const nustr = pars.anti.val > 0 ? "\u03BD" : "\u03BD&#773;";
   if (ptype == "Linear") {
+    // Handle different flavours in y-axis label.
+    const fstr =
+      pars.nu.val == 0 ? "e" : pars.nu.val == 1 ? "\u03BC" : "\u03C4";
     // Find range variable for label.
     let rangeID = "";
     for (let [key, par] of Object.entries(pars)) {
@@ -58,7 +61,15 @@ function createPlot(div, ptype, pars, xval, yval) {
         },
       },
       yaxis: {
-        title: "P(" + nustring + "\u2192" + nustring + "<sub>x</sub>)",
+        title:
+          "P(" +
+          nustr +
+          "<sub>" +
+          fstr +
+          "</sub>" +
+          "\u2192" +
+          nustr +
+          "<sub>x</sub>)",
       },
       showlegend: true,
       margin: {
@@ -86,9 +97,9 @@ function createPlot(div, ptype, pars, xval, yval) {
     const ternlayout = {
       ternary: {
         sum: 1,
-        aaxis: makeTernAxis(nustring + "<sub>e</sub>", 0),
-        baxis: makeTernAxis(nustring + "<sub>\u03BC</sub>", 45),
-        caxis: makeTernAxis(nustring + "<sub>\u03C4</sub>", -45),
+        aaxis: makeTernAxis(nustr + "<sub>e</sub>", 0),
+        baxis: makeTernAxis(nustr + "<sub>\u03BC</sub>", 45),
+        caxis: makeTernAxis(nustr + "<sub>\u03C4</sub>", -45),
       },
       margin: {
         l: 40,

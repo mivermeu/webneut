@@ -184,6 +184,8 @@
   for (let i = 0; i < ntbuttons.length; ++i) {
     ntbuttons[i].onclick = function () {
       pars.nu.val = this.value;
+      // Recreate plot to update axis label.
+      createPlot("plotlyplot", ptype, pars, xValues, yValues);
       updateGraph("nu");
     };
   }
@@ -204,7 +206,7 @@
     };
   }
 
-  // Render the ternary plot using plotly.
+  // Render the plot using plotly.
   createPlot("plotlyplot", ptype, pars, xValues, yValues);
 
   function generateData(pars, id = "", use_exp = false) {
@@ -223,7 +225,7 @@
     const rangeVarIsMixingPar = mixingpars.indexOf(thisArrID) != undefined;
     // Only update mixing matrices once if changed variable is mixing parameter.
     if (changedVarIsMixingPar && !rangeVarIsMixingPar) {
-      mat = new Matrices(pars);
+      mat.update(pars);
     }
 
     // Get x range and reset y values.
