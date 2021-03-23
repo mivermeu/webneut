@@ -1,22 +1,22 @@
 function addRow(id, pars) {
   // Button.
-  let buttond = document.getElementById(id+"_button");
+  let buttond = document.getElementById(id + "_button");
   buttond.innerHTML = "Make\nrange";
   // If pars designates this value as a range, disable range button.
-  if(Array.isArray(pars.val)) {
+  if (Array.isArray(pars.val)) {
     buttond.disabled = true;
   }
 
   // Label.
-  let labeld = document.getElementById(id+"_label");
+  let labeld = document.getElementById(id + "_label");
   labeld.innerHTML = pars.label;
 
   // Slider.
-  let sliderd = document.getElementById(id+"_slider");
+  let sliderd = document.getElementById(id + "_slider");
   createSlider(sliderd, pars.limits, pars.val, pars.precision, pars.snaps);
 
   // Input(s).
-  document.getElementById(id+"_inputs").replaceWith(createInput(sliderd));
+  document.getElementById(id + "_inputs").replaceWith(createInput(sliderd));
 
   return sliderd;
 }
@@ -27,7 +27,7 @@ function createSlider(el, slimits, sstart, precision, snaps = []) {
     orientation: "horizontal",
     connect: true,
     animate: false,
-    behaviour: 'snap-drag',
+    behaviour: "snap-drag",
     range: {
       min: slimits[0],
       max: slimits[1],
@@ -102,7 +102,7 @@ function makeRange(sliders, id) {
     document.getElementById(key + "_button").disabled = false;
   });
   // Find the new range slider and remake it with two handles.
-  const newrangeslider = sliders.find((slider) => slider.id == id+"_slider");
+  const newrangeslider = sliders.find((slider) => slider.id == id + "_slider");
   var ops = newrangeslider.noUiSlider.options;
   ops.start = [
     newrangeslider.noUiSlider.options.range["min"],
@@ -114,4 +114,44 @@ function makeRange(sliders, id) {
   let input = createInput(newrangeslider);
   document.getElementById(id + "_inputs").replaceWith(input);
   document.getElementById(id + "_button").disabled = true;
+}
+
+function addListeners(slider_arr, pars) {
+  // Check for changes in sliders. Change parameters
+  slider_arr.forEach(function (slider) {
+    // Update parameter values when slider value changes.
+    slider.noUiSlider.on("update", function (valuestrings) {
+      // Convert slider value(s) to numbers.
+      const vals = valuestrings.map(Number);
+      const key = slider.id.substr(0, slider.id.indexOf("_"));
+
+      // Change parameter map to reflect slider.
+      vals.length == 1 ? (pars[key].val = vals[0]) : (pars[key].val = vals);
+
+      updateGraph(xValues, yValues, key);
+    });
+
+    // Slider snapping.
+    slider.noUiSlider.on("slide", function (valuestrings) {
+      // Determine snap range in value units.
+      const srange = slider.noUiSlider.options.range;
+      const snapfrac = 0.02; // Snap range as fraction of slider range.
+      const snaprange = (srange["max"] - srange["min"]) * snapfrac;
+      // Convert slider value(s) to numbers.
+      const vals = valuestrings.map(Number);
+      const key = slider.id.substr(0, slider.id.indexOf("_"));
+
+      vals.forEach(function (v, i) {
+        pars[key].snaps.forEach(function (snapval) {
+          if (math.abs(v - snapval) < snaprange && snap) {
+            vals[i] = snapval;
+            var tmpvals = [null, null];
+            tmpvals[i] = snapval;
+            // Use update guard to avoid update on set causing infinite loop.
+            slider.noUiSlider.set(tmpvals, false, false);
+          }
+        });
+      });
+    });
+  });
 }

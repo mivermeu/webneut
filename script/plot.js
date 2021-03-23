@@ -42,7 +42,7 @@ function createPlot(div, ptype, pars, xval, yval) {
       pars.nu.val == 0 ? "e" : pars.nu.val == 1 ? "\u03BC" : "\u03C4";
     // Find range variable for label.
     let rangeID = "";
-    for (let [key, par] of Object.entries(pars)) {
+    for (const [key, par] of Object.entries(pars)) {
       if (Array.isArray(par.val)) {
         rangeID = key;
         break;

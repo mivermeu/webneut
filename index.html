@@ -29,7 +29,12 @@
         </div>
 
         <div id="snap-checkbox-container" class="checkbox">
-          <input type="checkbox" id="snap-checkbox" name="snap-option" checked="true">
+          <input
+            type="checkbox"
+            id="snap-checkbox"
+            name="snap-option"
+            checked="true"
+          />
           <label for="snap-option">Sliders snap to values of interest</label>
         </div>
 
@@ -160,8 +165,9 @@
 </html>
 
 <script>
+  // Global variables.
 
-  // Get neutrino oscillation parameter objects.
+  // Neutrino oscillation parameter objects.
   let pars = makeParMap();
   let mat = new Matrices(pars);
 
@@ -174,54 +180,105 @@
   let xValues = [];
   let yValues = [];
 
-  // Handle input from radio buttons.
   // Plot type.
-  const ptbuttons = document.getElementsByName("plottype");
   let ptype = document.querySelector('input[name="plottype"]:checked').value;
-  for (let i = 0; i < ptbuttons.length; ++i) {
-    ptbuttons[i].onclick = function () {
-      ptype = this.value;
-      createPlot("plotlyplot", ptype, pars, xValues, yValues);
-      // Force a redraw in the new plot even though the data hasn't changed.
-      drawnPars.nu.val = -1;
-      updateGraph(xValues, yValues);
-    };
-  }
-  // Snap checkbox.
-  const snapbox = document.getElementsByName("snap-option");
-  let snap = snapbox[0].checked;
-  snapbox[0].onclick = function() {
-    snap = this.checked;
-  }
-  // Neutrino flavour.
-  let ntbuttons = document.getElementsByName("nutype");
-  for (let i = 0; i < ntbuttons.length; ++i) {
-    ntbuttons[i].onclick = function () {
-      pars.nu.val = this.value;
-      // Recreate plot to update axis label.
-      createPlot("plotlyplot", ptype, pars, xValues, yValues);
-      updateGraph(xValues, yValues, "nu");
-    };
-  }
-  // Neutrino chirality.
-  let chbuttons = document.getElementsByName("chirality");
-  for (let i = 0; i < chbuttons.length; ++i) {
-    chbuttons[i].onclick = function () {
-      pars.anti.val = this.value;
-      // Recreate plot to update axis and trace labels.
-      createPlot("plotlyplot", ptype, pars, xValues, yValues);
-      // Recreate radio button labels.
-      const nustring = pars.anti.val > 0 ? "&nu;" : "&nu;&#773;";
-      document.getElementById("nutype1-label").innerHTML = nustring+"<sub>e</sub>";
-      document.getElementById("nutype2-label").innerHTML = nustring+"<sub>&mu;</sub>";
-      document.getElementById("nutype3-label").innerHTML = nustring+"<sub>&tau;</sub>";
+  // Snap option.
+  let snap = document.querySelector('input[name="snap-option"]:checked')
+    .checked;
 
-      updateGraph(xValues, yValues, "anti");
+  // Stuff to do once at startup.
+  window.onload = function () {
+    // Handle input from radio buttons.
+    const ptbuttons = document.getElementsByName("plottype");
+    for (let i = 0; i < ptbuttons.length; ++i) {
+      ptbuttons[i].onclick = function () {
+        ptype = this.value;
+        createPlot("plotlyplot", ptype, pars, xValues, yValues);
+        // Force a redraw in the new plot even though the data hasn't changed.
+        drawnPars.nu.val = -1;
+        updateGraph(xValues, yValues);
+      };
+    }
+    // Snap checkbox listener.
+    const snapbox = document.getElementsByName("snap-option");
+    snapbox[0].onclick = function () {
+      snap = this.checked;
     };
-  }
+    // Neutrino flavour radio button listeners.
+    let ntbuttons = document.getElementsByName("nutype");
+    for (let i = 0; i < ntbuttons.length; ++i) {
+      ntbuttons[i].onclick = function () {
+        pars.nu.val = this.value;
+        // Recreate plot to update axis label.
+        createPlot("plotlyplot", ptype, pars, xValues, yValues);
+        updateGraph(xValues, yValues, "nu");
+      };
+    }
+    // Neutrino chirality radio button listeners.
+    let chbuttons = document.getElementsByName("chirality");
+    for (let i = 0; i < chbuttons.length; ++i) {
+      chbuttons[i].onclick = function () {
+        pars.anti.val = this.value;
+        // Recreate plot to update axis and trace labels.
+        createPlot("plotlyplot", ptype, pars, xValues, yValues);
+        // Recreate radio button labels.
+        const nustring = pars.anti.val > 0 ? "&nu;" : "&nu;&#773;";
+        document.getElementById("nutype1-label").innerHTML =
+          nustring + "<sub>e</sub>";
+        document.getElementById("nutype2-label").innerHTML =
+          nustring + "<sub>&mu;</sub>";
+        document.getElementById("nutype3-label").innerHTML =
+          nustring + "<sub>&tau;</sub>";
 
-  // Render the plot using plotly.
-  createPlot("plotlyplot", ptype, pars, xValues, yValues);
+        updateGraph(xValues, yValues, "anti");
+      };
+    }
+
+    // Render the plot using plotly.
+    createPlot("plotlyplot", ptype, pars, xValues, yValues);
+
+    // Add listeners for buttons and set up sliders.
+    const ids = [
+      "nsteps",
+      "L",
+      "E",
+      "rho",
+      "th12",
+      "th23",
+      "th13",
+      "Dm21sq",
+      "Dm31sq",
+      "dCP",
+    ];
+    // Set up control panel.
+    const controlp = document.getElementById("controlp");
+    let sliders = [];
+    ids.forEach(function (id) {
+      // Set up slider in control panel.
+      sliders.push(addRow(id, pars[id]));
+      // Add listener for buttons.
+      let bd = document.getElementById(id + "_button");
+      bd.addEventListener("click", function () {
+        makeRange(sliders, id);
+        addListeners(sliders, pars);
+        if (ptype == "Linear") {
+          Plotly.relayout("plotlyplot", {
+            "xaxis.title.text": pars[id].label,
+          });
+        }
+      });
+    });
+    // Add listeners to sliders.
+    addListeners(sliders, pars);
+
+    // Listener for the download data button.
+    const dbutton = document.getElementById("downloadbutton");
+    dbutton.addEventListener("click", function () {
+      const fileName = "nu.csv";
+
+      saveData(xValues, yValues, pars, fileName);
+    });
+  }; // End window.onload
 
   function generateData(pars, id = "", use_exp = false) {
     // Find the array in the parameter map. Needs one guaranteed array in pars.
@@ -234,7 +291,16 @@
     let thisArr = pars[thisArrID].val;
 
     // Changed/range variable is a mixing parameter.
-    const mixingpars = ["anti", "th12", "th23", "th13", "Dm21sq", "Dm31sq", "dCP", "rho"];
+    const mixingpars = [
+      "anti",
+      "th12",
+      "th23",
+      "th13",
+      "Dm21sq",
+      "Dm31sq",
+      "dCP",
+      "rho",
+    ];
     const changedVarIsMixingPar = mixingpars.indexOf(id) != undefined;
     const rangeVarIsMixingPar = mixingpars.indexOf(thisArrID) != undefined;
     // Only update mixing matrices once if changed variable is mixing parameter.
@@ -279,9 +345,7 @@
 
     // Get new data.
     const newdata = generateData(pars, id);
-    if (newdata == undefined) {
-      return;
-    }
+    if (newdata == undefined) return;
     [xValues, yValues] = newdata;
 
     // Update plot data.
@@ -303,80 +367,6 @@
       // linlayout.xaxis.title.text = pars[thisArrID].label;
     }
   }
-
-  function addListeners(slider_arr, id = "") {
-    // Check for changes in sliders. Change parameters
-    slider_arr.forEach(function (slider) {
-      // Update parameter values when slider value changes.
-      slider.noUiSlider.on("update", function (valuestrings) {
-        // Convert slider value(s) to numbers.
-        const vals = valuestrings.map(Number);
-        const key = slider.id.substr(0, slider.id.indexOf("_"));
-
-        // Change parameter map to reflect slider.
-        vals.length == 1 ? (pars[key].val = vals[0]) : (pars[key].val = vals);
-
-        updateGraph(xValues, yValues, key);
-      });
-
-      // Slider snapping.
-      slider.noUiSlider.on("slide", function(valuestrings) {
-        // Determine snap range in value units.
-        const srange = slider.noUiSlider.options.range;
-        const snapfrac = 0.02; // Snap range as fraction of slider range.
-        const snaprange = (srange["max"] - srange["min"]) * snapfrac;
-        // Convert slider value(s) to numbers.
-        const vals = valuestrings.map(Number);
-        const key = slider.id.substr(0, slider.id.indexOf("_"));
-
-        vals.forEach(function (v, i) {
-          pars[key].snaps.forEach(function (snapval) {
-            if (math.abs(v - snapval) < snaprange && snap) {
-              vals[i] = snapval;
-              var tmpvals = [null, null];
-              tmpvals[i] = snapval;
-              // Use update guard to avoid update on set causing infinite loop.
-              slider.noUiSlider.set(tmpvals, false, false);
-            }
-          });
-        });
-      });
-    });
-  }
-
-  // Add listeners for buttons and set up sliders.
-  var ids = [
-    "nsteps",
-    "L",
-    "E",
-    "rho",
-    "th12",
-    "th23",
-    "th13",
-    "Dm21sq",
-    "Dm31sq",
-    "dCP",
-  ];
-  // Set up control panel.
-  const controlp = document.getElementById("controlp");
-  var sliders = [];
-  ids.forEach(function (id) {
-    // Set up slider in control panel.
-    sliders.push(addRow(id, pars[id]));
-    // Add listener for buttons.
-    var bd = document.getElementById(id + "_button");
-    bd.addEventListener("click", function () {
-      makeRange(sliders, id);
-      addListeners(sliders, id);
-      if (ptype == "Linear") {
-        Plotly.relayout("plotlyplot", {
-          "xaxis.title.text": pars[id].label,
-        });
-      }
-    });
-  });
-  // Add listeners to sliders.
-  addListeners(sliders);
 
   // Function to convert the nu arrays to a csv format.
   function dataToCsv(x, y, p) {
@@ -425,11 +415,4 @@
       window.URL.revokeObjectURL(url);
     };
   })();
-
-  var dbutton = document.getElementById("downloadbutton");
-  dbutton.addEventListener("click", function () {
-    var fileName = "nu.csv";
-
-    saveData(xValues, yValues, pars, fileName);
-  });
 </script>
