@@ -1,6 +1,14 @@
-<!DOCTYPE >
+<!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>WebNeut</title>
+    <meta content="" name="description" />
+    <meta content="" name="keywords" />
+
     <link href="style/style.css" rel="stylesheet" />
     <link href="style/nouislider.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.0/nouislider.min.js"></script>
@@ -10,157 +18,303 @@
     <script src="script/Oscillator.js"></script>
     <script src="script/controlpanel.js"></script>
     <script src="script/plot.js"></script>
+    <script src="script/jszip.min.js"></script>
+    <script src="script/FileSaver.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-TCW9GRNQKP"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-TCW9GRNQKP");
+    </script>
   </head>
   <body>
-    <div id="plotlyplot"></div>
-    <div id="controlpanel-container">
-      <div id="plot-controlpanel" class="controlpanel">
-        <div id="plottype-container" class="radiobutton">
-          <input
-            type="radio"
-            id="plottype1"
-            name="plottype"
-            value="Linear"
-            checked="true"
-          />
-          <label for="plottype1">Linear</label>
-          <input type="radio" id="plottype2" name="plottype" value="Ternary" />
-          <label for="plottype2">Ternary</label>
-        </div>
+    <main>
+      <section id="plot-section">
+        <h1 class="section-title">WebNeut</h1>
+        <hr />
 
-        <div id="snap-checkbox-container" class="checkbox">
-          <input
-            type="checkbox"
-            id="snap-checkbox"
-            name="snap-option"
-            checked="true"
-          />
-          <label for="snap-option">Sliders snap to values of interest</label>
-        </div>
+        <div id="plotlyplot"></div>
+        <div id="controlpanel-container">
+          <div id="plot-controlpanel" class="controlpanel panel">
+            <h2>Plot options</h2>
+            <hr />
+            <div id="plottype-container" class="radiobutton">
+              <input
+                type="radio"
+                id="plottype1"
+                name="plottype"
+                value="Linear"
+                checked="true"
+              />
+              <label for="plottype1">Linear</label>
+              <input
+                type="radio"
+                id="plottype2"
+                name="plottype"
+                value="Ternary"
+              />
+              <label for="plottype2">Ternary</label>
+            </div>
 
-        <div class="slider-assembly">
+            <div id="snap-checkbox-container" class="checkbox">
+              <input
+                type="checkbox"
+                id="snap-checkbox"
+                name="snap-option"
+                checked="true"
+              />
+              <label for="snap-checkbox"
+                >Sliders snap to values of interest</label
+              >
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="nsteps_button"
+                class="slider-button"
+                type="button"
+                style="display: none"
+              ></button>
+              <button
+                id="nsteps_animate"
+                class="slider-animate"
+                type="button"
+                style="display: none"
+              ></button>
+              <div id="nsteps_label" class="slider-label"></div>
+              <div id="nsteps_slider" class="slider"></div>
+              <div id="nsteps_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="animspeed_button"
+                class="slider-button"
+                type="button"
+                style="display: none"
+              ></button>
+              <button
+                id="animspeed_animate"
+                class="slider-animate"
+                type="button"
+                style="display: none"
+              ></button>
+              <div id="animspeed_label" class="slider-label"></div>
+              <div id="animspeed_slider" class="slider"></div>
+              <div id="animspeed_inputs" class="slider-inputs"></div>
+            </div>
+          </div>
+          <!-- End experimental parameters control panel. -->
+
+          <div id="experiment-controlpanel" class="controlpanel panel">
+            <h2>Experiment parameters</h2>
+            <hr />
+            <div id="chirality" class="radiobutton">
+              <input
+                type="radio"
+                id="chirality1"
+                name="chirality"
+                value="1"
+                checked="true"
+              />
+              <label for="chirality1">Neutrino</label>
+              <input type="radio" id="chirality2" name="chirality" value="-1" />
+              <label for="chirality2">Antineutrino</label>
+            </div>
+
+            <div id="nutype-container" class="radiobutton">
+              <input type="radio" id="nutype1" name="nutype" value="0" />
+              <label id="nutype1-label" for="nutype1">&nu;<sub>e</sub></label>
+              <input
+                type="radio"
+                id="nutype2"
+                name="nutype"
+                value="1"
+                checked="true"
+              />
+              <label id="nutype2-label" for="nutype2"
+                >&nu;<sub>&mu;</sub></label
+              >
+              <input type="radio" id="nutype3" name="nutype" value="2" />
+              <label id="nutype3-label" for="nutype3"
+                >&nu;<sub>&tau;</sub></label
+              >
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="L_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="L_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="L_label" class="slider-label"></div>
+              <div id="L_slider" class="slider"></div>
+              <div id="L_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="E_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="E_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="E_label" class="slider-label"></div>
+              <div id="E_slider" class="slider"></div>
+              <div id="E_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="rho_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="rho_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="rho_label" class="slider-label"></div>
+              <div id="rho_slider" class="slider"></div>
+              <div id="rho_inputs" class="slider-inputs"></div>
+            </div>
+          </div>
+          <!-- End experimental parameters control panel. -->
+
+          <div id="mixing-controlpanel" class="controlpanel panel">
+            <h2>Neutrino mixing parameters</h2>
+            <hr />
+            <div class="slider-assembly">
+              <button
+                id="th12_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="th12_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="th12_label" class="slider-label"></div>
+              <div id="th12_slider" class="slider"></div>
+              <div id="th12_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="th23_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="th23_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="th23_label" class="slider-label"></div>
+              <div id="th23_slider" class="slider"></div>
+              <div id="th23_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="th13_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="th13_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="th13_label" class="slider-label"></div>
+              <div id="th13_slider" class="slider"></div>
+              <div id="th13_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="Dm21sq_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="Dm21sq_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="Dm21sq_label" class="slider-label"></div>
+              <div id="Dm21sq_slider" class="slider"></div>
+              <div id="Dm21sq_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="Dm31sq_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="Dm31sq_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="Dm31sq_label" class="slider-label"></div>
+              <div id="Dm31sq_slider" class="slider"></div>
+              <div id="Dm31sq_inputs" class="slider-inputs"></div>
+            </div>
+
+            <div class="slider-assembly">
+              <button
+                id="dCP_button"
+                class="slider-button"
+                type="button"
+              ></button>
+              <button
+                id="dCP_animate"
+                class="slider-animate"
+                type="button"
+              ></button>
+              <div id="dCP_label" class="slider-label"></div>
+              <div id="dCP_slider" class="slider"></div>
+              <div id="dCP_inputs" class="slider-inputs"></div>
+            </div>
+          </div>
+          <!-- End mixing parameters control panel. -->
+        </div>
+        <!-- End control panel container. -->
+        <div id="buttond">
+          <button id="download-button" type="button">Download CSV</button>
           <button
-            id="nsteps_button"
-            class="slider-button"
+            id="github-button"
             type="button"
-            style="display: none"
-          ></button>
-          <div id="nsteps_label" class="slider-label"></div>
-          <div id="nsteps_slider" class="slider"></div>
-          <div id="nsteps_inputs" class="slider-inputs"></div>
+            onclick="location.href='https://github.com/mivermeu/webneut';"
+          >
+            GitHub
+          </button>
         </div>
-      </div>
-      <!-- End experimental parameters control panel. -->
-
-      <div id="experiment-controlpanel" class="controlpanel">
-        <div id="nutype-container" class="radiobutton">
-          <input type="radio" id="nutype1" name="nutype" value="0" />
-          <label id="nutype1-label" for="nutype1">&nu;<sub>e</sub></label>
-          <input
-            type="radio"
-            id="nutype2"
-            name="nutype"
-            value="1"
-            checked="true"
-          />
-          <label id="nutype2-label" for="nutype2">&nu;<sub>&mu;</sub></label>
-          <input type="radio" id="nutype3" name="nutype" value="2" />
-          <label id="nutype3-label" for="nutype3">&nu;<sub>&tau;</sub></label>
-        </div>
-
-        <div id="chirality" class="radiobutton">
-          <input
-            type="radio"
-            id="chirality1"
-            name="chirality"
-            value="1"
-            checked="true"
-          />
-          <label for="chirality1">Neutrino</label>
-          <input type="radio" id="chirality2" name="chirality" value="-1" />
-          <label for="chirality2">Antineutrino</label>
-        </div>
-
-        <div class="slider-assembly">
-          <button id="L_button" class="slider-button" type="button"></button>
-          <div id="L_label" class="slider-label"></div>
-          <div id="L_slider" class="slider"></div>
-          <div id="L_inputs" class="slider-inputs"></div>
-        </div>
-
-        <div class="slider-assembly">
-          <button id="E_button" class="slider-button" type="button"></button>
-          <div id="E_label" class="slider-label"></div>
-          <div id="E_slider" class="slider"></div>
-          <div id="E_inputs" class="slider-inputs"></div>
-        </div>
-
-        <div class="slider-assembly">
-          <button id="rho_button" class="slider-button" type="button"></button>
-          <div id="rho_label" class="slider-label"></div>
-          <div id="rho_slider" class="slider"></div>
-          <div id="rho_inputs" class="slider-inputs"></div>
-        </div>
-      </div>
-      <!-- End experimental parameters control panel. -->
-
-      <div id="mixing-controlpanel" class="controlpanel">
-        <div class="slider-assembly">
-          <button id="th12_button" class="slider-button" type="button"></button>
-          <div id="th12_label" class="slider-label"></div>
-          <div id="th12_slider" class="slider"></div>
-          <div id="th12_inputs" class="slider-inputs"></div>
-        </div>
-
-        <div class="slider-assembly">
-          <button id="th23_button" class="slider-button" type="button"></button>
-          <div id="th23_label" class="slider-label"></div>
-          <div id="th23_slider" class="slider"></div>
-          <div id="th23_inputs" class="slider-inputs"></div>
-        </div>
-
-        <div class="slider-assembly">
-          <button id="th13_button" class="slider-button" type="button"></button>
-          <div id="th13_label" class="slider-label"></div>
-          <div id="th13_slider" class="slider"></div>
-          <div id="th13_inputs" class="slider-inputs"></div>
-        </div>
-
-        <div class="slider-assembly">
-          <button
-            id="Dm21sq_button"
-            class="slider-button"
-            type="button"
-          ></button>
-          <div id="Dm21sq_label" class="slider-label"></div>
-          <div id="Dm21sq_slider" class="slider"></div>
-          <div id="Dm21sq_inputs" class="slider-inputs"></div>
-        </div>
-
-        <div class="slider-assembly">
-          <button
-            id="Dm31sq_button"
-            class="slider-button"
-            type="button"
-          ></button>
-          <div id="Dm31sq_label" class="slider-label"></div>
-          <div id="Dm31sq_slider" class="slider"></div>
-          <div id="Dm31sq_inputs" class="slider-inputs"></div>
-        </div>
-
-        <div class="slider-assembly">
-          <button id="dCP_button" class="slider-button" type="button"></button>
-          <div id="dCP_label" class="slider-label"></div>
-          <div id="dCP_slider" class="slider"></div>
-          <div id="dCP_inputs" class="slider-inputs"></div>
-        </div>
-      </div>
-      <!-- End mixing parameters control panel. -->
-    </div>
-    <!-- End control panel container. -->
-    <div id="buttond">
-      <button id="downloadbutton" type="button">Download CSV</button>
-    </div>
+      </section>
+      <!-- End plot section. -->
+    </main>
   </body>
 </html>
 
@@ -183,20 +337,37 @@
   // Plot type.
   let ptype = document.querySelector('input[name="plottype"]:checked').value;
   // Snap option.
-  let snap = document.querySelector('input[name="snap-option"]:checked')
-    .checked;
+  let snap = document.querySelector('input[name="snap-option"]').checked;
+  // Plot height saved for redrawing on resize.
+  let pheight = window
+    .getComputedStyle(document.getElementById("plotlyplot"))
+    .getPropertyValue("height");
+  // Animation parameters.
+  let animating = "";
+  let animID = 0;
+  let animinterval = 100;
 
   // Stuff to do once at startup.
   window.onload = function () {
+    // Listen for plot resizing.
+    window.onmouseup = function () {
+      // If height was different from saved height, remake plot.
+      const plotd = document.getElementById("plotlyplot");
+      const newheight = window
+        .getComputedStyle(plotd)
+        .getPropertyValue("height");
+      if (newheight != pheight) {
+        pheight = newheight;
+        createPlot("plotlyplot", ptype, pars, xValues, yValues);
+      }
+    };
+
     // Handle input from radio buttons.
     const ptbuttons = document.getElementsByName("plottype");
     for (let i = 0; i < ptbuttons.length; ++i) {
       ptbuttons[i].onclick = function () {
         ptype = this.value;
         createPlot("plotlyplot", ptype, pars, xValues, yValues);
-        // Force a redraw in the new plot even though the data hasn't changed.
-        drawnPars.nu.val = -1;
-        updateGraph(xValues, yValues);
       };
     }
     // Snap checkbox listener.
@@ -211,7 +382,7 @@
         pars.nu.val = this.value;
         // Recreate plot to update axis label.
         createPlot("plotlyplot", ptype, pars, xValues, yValues);
-        updateGraph(xValues, yValues, "nu");
+        updateGraph("nu");
       };
     }
     // Neutrino chirality radio button listeners.
@@ -230,7 +401,7 @@
         document.getElementById("nutype3-label").innerHTML =
           nustring + "<sub>&tau;</sub>";
 
-        updateGraph(xValues, yValues, "anti");
+        updateGraph("anti");
       };
     }
 
@@ -240,6 +411,7 @@
     // Add listeners for buttons and set up sliders.
     const ids = [
       "nsteps",
+      "animspeed",
       "L",
       "E",
       "rho",
@@ -256,7 +428,7 @@
     ids.forEach(function (id) {
       // Set up slider in control panel.
       sliders.push(addRow(id, pars[id]));
-      // Add listener for buttons.
+      // Add listener for range buttons.
       let bd = document.getElementById(id + "_button");
       bd.addEventListener("click", function () {
         makeRange(sliders, id);
@@ -267,12 +439,23 @@
           });
         }
       });
+      // Add listener for animation buttons.
+      let abd = document.getElementById(id + "_animate");
+      abd.addEventListener("click", function () { animate(id); });
     });
     // Add listeners to sliders.
     addListeners(sliders, pars);
+    // Add special listener to animation speed slider for live updates.
+    const anims = document.getElementById("animspeed_slider").noUiSlider.on("update", function() {
+      const animtmp = animating;
+      if(animtmp != "") {
+        animate(animtmp);
+        animate(animtmp);
+      }
+    });
 
     // Listener for the download data button.
-    const dbutton = document.getElementById("downloadbutton");
+    const dbutton = document.getElementById("download-button");
     dbutton.addEventListener("click", function () {
       const fileName = "nu.csv";
 
@@ -280,53 +463,77 @@
     });
   }; // End window.onload
 
-  function generateData(pars, id = "", use_exp = false) {
+  function animate(key) {
+    const thisd = document.getElementById(key+"_animate");
+
+    if (animating != "") {
+      thisd.innerHTML = "Animate";
+      window.clearInterval(animID);
+    }
+    if(animating == "" || animating != key) {
+      thisd.innerHTML = "Stop";
+      animID = window.setInterval(function () {
+        increment(key, animinterval/(1000*pars.animspeed.val));
+      }, animinterval);
+    }
+    if(animating == key) {
+      animating = "";
+    } else {
+      animating = key;
+    }
+  }
+
+  function increment(key, incrementfrac) {
+    // Determine the time it takes for a single frame to update the increment.
+    const start = Date.now();
+
+    const incrementval = (pars[key].limits[1] - pars[key].limits[0]) * incrementfrac;
+    pars[key].val += incrementval;
+    if(pars[key].val > pars[key].limits[1]) {
+      pars[key].val -= (pars[key].limits[1]-pars[key].limits[0]);
+    }
+    document.getElementById(key+"_slider").noUiSlider.set(pars[key].val);
+    updateGraph(key);
+
+    // Reset animation interval on big deviations.
+    const elapsedms = Date.now() - start;
+    if(elapsedms < 0.6*animinterval || elapsedms > 1.7*animinterval) {
+      animinterval = (elapsedms+animinterval)/2;
+      animate(key);
+      animate(key);
+    }
+  }
+
+  function generateData(pars, changeKey, use_exp = false) {
     // Find the array in the parameter map. Needs one guaranteed array in pars.
     const rangekeys = Object.keys(pars).filter((key) =>
       Array.isArray(pars[key].val)
     );
     // If more than one or no arrays found in parameter map, do nothing.
     if (rangekeys.length != 1) return undefined;
-    const thisArrID = rangekeys[0];
-    let thisArr = pars[thisArrID].val;
+    const rangeKey = rangekeys[0];
+    const rangeArr = pars[rangeKey].val;
 
-    // Changed/range variable is a mixing parameter.
-    const mixingpars = [
-      "anti",
-      "th12",
-      "th23",
-      "th13",
-      "Dm21sq",
-      "Dm31sq",
-      "dCP",
-      "rho",
-    ];
-    const changedVarIsMixingPar = mixingpars.indexOf(id) != undefined;
-    const rangeVarIsMixingPar = mixingpars.indexOf(thisArrID) != undefined;
-    // Only update mixing matrices once if changed variable is mixing parameter.
-    if (changedVarIsMixingPar && !rangeVarIsMixingPar) {
-      mat.update(pars);
+    // Update mixing matrices with changed parameter if it's not the range parameter..
+    if(changeKey != rangeKey) {
+      mat.update(changeKey, pars[changeKey].val);
     }
 
     // Get x range and reset y values.
     const xv = math
       .range(
-        thisArr[0],
-        thisArr[1],
-        (thisArr[1] - thisArr[0]) / pars.nsteps.val,
+        rangeArr[0],
+        rangeArr[1],
+        (rangeArr[1] - rangeArr[0]) / pars.nsteps.val,
         true
       )
       .toArray();
     let yv = [];
 
-    // Use a temporary non-range parameter map to get oscillation results.
-    let tmppars = _.cloneDeep(pars);
+    // Get oscillation results.
     for (let x of xv) {
-      tmppars[thisArrID].val = x;
-      if (rangeVarIsMixingPar) {
-        mat.update(tmppars);
-      }
-      yv.push(oscillate(tmppars, mat, use_exp));
+      mat.update(rangeKey, x);
+      yv.push(oscillate(mat, use_exp));
     }
     yv = math.transpose(yv);
 
@@ -334,7 +541,7 @@
   }
 
   // Function to update the data in the graph.
-  function updateGraph(xValues, yValues, id = "") {
+  function updateGraph(changeKey) {
     // Check if the new parameters are different from those already drawn.
     // If they're not equal, set them to be equal and proceed with processing.
     if (_.isEqual(pars, drawnPars)) {
@@ -344,7 +551,7 @@
     }
 
     // Get new data.
-    const newdata = generateData(pars, id);
+    const newdata = generateData(pars, changeKey);
     if (newdata == undefined) return;
     [xValues, yValues] = newdata;
 
@@ -364,14 +571,13 @@
         },
         [0, 1, 2]
       );
-      // linlayout.xaxis.title.text = pars[thisArrID].label;
     }
   }
 
   // Function to convert the nu arrays to a csv format.
   function dataToCsv(x, y, p) {
     // Header. First, find range parameter in parameter set.
-    var arrP = "";
+    let arrP = "";
     for (const [key, par] of Object.entries(p)) {
       if (Array.isArray(par.val)) {
         arrP = key;
@@ -395,24 +601,39 @@
       .join("\n");
   }
 
+  function parsToCsv(p) {
+    // Header.
+    let data = [["Parameter", "value"]];
+    for (const key in p) {
+      // Replace range variable with string.
+      let val = Array.isArray(p[key].val) ? p[key].val.join("-") : p[key].val;
+      // Replace neutrino type numbers with strings.
+      if (key == "nu") val = ["e", "\u03BC", "\u03C4"][val];
+      // Replace HTML tags sub and sup with _ and ^.
+      const label = p[key].label
+        .replace(/<sup>([\w-]+)<\/sup>/g, "^$1")
+        .replace(/<sub>([\w-]+)<\/sub>/g, "_$1");
+      data.push([label, val]);
+    }
+
+    return data.map((row) => row.join(",")).join("\n");
+  }
+
   // Download button functionality.
-  var saveData = (function () {
-    var a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
-    return function (xValues, yValues, pars, fileName) {
-      // Generate new data based on the more expensive and accurate exponential algorithm.
-      const expdata = generateData(pars, "", true);
-      var csv =
-        expdata == undefined
-          ? dataToCsv(xValues, yValues, pars)
-          : dataToCsv(...expdata, pars);
-      var blob = new Blob([csv], { type: "octet/stream" });
-      var url = window.URL.createObjectURL(blob);
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    };
-  })();
+  function saveData(xValues, yValues, pars, fileName) {
+    // Generate new data based on the more costly and accurate exponential algorithm.
+    const expdata = generateData(pars, "nu", true);
+    let csv =
+      expdata == undefined
+        ? dataToCsv(xValues, yValues, pars)
+        : dataToCsv(...expdata, pars);
+
+    // let blob = new Blob([csv], { type: "octet/stream" });
+    zip = new JSZip();
+    zip.file("nu.csv", csv);
+    zip.file("pars.csv", parsToCsv(pars));
+    zip.generateAsync({ type: "blob" }).then(function (blob) {
+      saveAs(blob, "nu.zip");
+    });
+  }
 </script>

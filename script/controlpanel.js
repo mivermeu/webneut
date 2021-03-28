@@ -1,10 +1,18 @@
 function addRow(id, pars) {
-  // Button.
+  // Range button.
   let buttond = document.getElementById(id + "_button");
-  buttond.innerHTML = "Make\nrange";
+  buttond.innerHTML = "Range";
   // If pars designates this value as a range, disable range button.
   if (Array.isArray(pars.val)) {
     buttond.disabled = true;
+  }
+
+  // Animate button.
+  let animated = document.getElementById(id + "_animate");
+  animated.innerHTML = "Animate";
+  // If pars designates this value as a range, disable range button.
+  if (Array.isArray(pars.val)) {
+    animated.disabled = true;
   }
 
   // Label.
@@ -27,6 +35,7 @@ function createSlider(el, slimits, sstart, precision, snaps = []) {
     orientation: "horizontal",
     connect: true,
     animate: false,
+    keyboardSupport: false,
     behaviour: "snap-drag",
     range: {
       min: slimits[0],
@@ -55,7 +64,8 @@ function createInput(sliderd) {
   var inputs = document.createElement("div");
   sstart.forEach(function (_, handle) {
     let thisinput = document.createElement("input");
-    thisinput.style.width = "100px";
+    // thisinput.style.width = "100px";
+    thisinput.className = "slider-input";
 
     // Update input field on slider change.
     sliderd.noUiSlider.on("update", function (value) {
@@ -100,6 +110,7 @@ function makeRange(sliders, id) {
     let inputs = createInput(slider);
     document.getElementById(key + "_inputs").replaceWith(inputs);
     document.getElementById(key + "_button").disabled = false;
+    document.getElementById(key + "_animate").disabled = false;
   });
   // Find the new range slider and remake it with two handles.
   const newrangeslider = sliders.find((slider) => slider.id == id + "_slider");
@@ -114,6 +125,10 @@ function makeRange(sliders, id) {
   let input = createInput(newrangeslider);
   document.getElementById(id + "_inputs").replaceWith(input);
   document.getElementById(id + "_button").disabled = true;
+  if(animating==id) {
+    animate(id);
+  }
+  document.getElementById(id + "_animate").disabled = true;
 }
 
 function addListeners(slider_arr, pars) {
@@ -128,7 +143,10 @@ function addListeners(slider_arr, pars) {
       // Change parameter map to reflect slider.
       vals.length == 1 ? (pars[key].val = vals[0]) : (pars[key].val = vals);
 
-      updateGraph(xValues, yValues, key);
+      // Make exceptions for parameters that don't update the data.
+      if(key != "animspeed") {
+        updateGraph(key);
+      }
     });
 
     // Slider snapping.

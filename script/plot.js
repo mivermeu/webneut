@@ -48,20 +48,20 @@ function createPlot(div, ptype, pars, xval, yval) {
         break;
       }
     }
-    const linlayout = {
+    let linlayout = {
       font: {
         family: "serif",
         serif: "times",
-        size: 18,
+        size: 16,
       },
       xaxis: {
         title: {
           text: pars[rangeID].label,
-          standoff: 100,
+          standoff: 15,
         },
       },
-      yaxis: {
-        title:
+      title: {
+        text:
           "P(" +
           nustr +
           "<sub>" +
@@ -70,16 +70,32 @@ function createPlot(div, ptype, pars, xval, yval) {
           "\u2192" +
           nustr +
           "<sub>x</sub>)",
+        x: 0,
+        xanchor: "left",
+        yanchor: "bottom",
+        xref: 'paper',
+        yref: 'paper'
       },
       showlegend: true,
+      legend: {
+        orientation: "h",
+        x: 1,
+        y: 1,
+        xanchor: "right",
+        yanchor: "bottom",
+      },
       margin: {
-        b: 60,
+        b: 50,
         t: 20,
-        pad: 5,
+        l: 50,
+        r: 30,
+        pad: 5
       },
     };
 
-    Plotly.newPlot(div, lintraces(pars, xval, yval), linlayout);
+    Plotly.newPlot(div, lintraces(pars, xval, yval), linlayout, {
+      responsive: true,
+    });
   } else if (ptype == "Ternary") {
     const ternarytrace = {
       type: "scatterternary",
@@ -107,8 +123,11 @@ function createPlot(div, ptype, pars, xval, yval) {
         b: 50,
         t: 50,
       },
+      font: {
+        family: "serif"
+      }
     };
 
-    Plotly.newPlot(div, [ternarytrace], ternlayout);
+    Plotly.newPlot(div, [ternarytrace], ternlayout, { responsive: true });
   }
 }

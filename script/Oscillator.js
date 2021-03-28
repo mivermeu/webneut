@@ -7,6 +7,13 @@ function makeParMap() {
       precision: 0,
       limits: [1, 1000],
     },
+    animspeed: {
+      val: 5,
+      label: "Animation period [s]",
+      snaps: [],
+      precision: 1,
+      limits: [1, 20],
+    },
     nu: {
       val: 1,
       label: "Neutrino flavour",
@@ -59,7 +66,7 @@ function makeParMap() {
     Dm21sq: {
       val: 7.5,
       label:
-        "\u0394m<sup>2</sup><sub>21</sub> [10<sup>-5</sup> eV<sup>2</sup>]",
+        "\u0394m<sub>21</sub><sup>2</sup> [10<sup>-5</sup> eV<sup>2</sup>]",
       snaps: [7.5],
       precision: 4,
       limits: [0, 10],
@@ -67,13 +74,13 @@ function makeParMap() {
     Dm31sq: {
       val: 2.457,
       label:
-        "\u0394m<sup>2</sup><sub>31</sub> [10<sup>-5</sup> eV<sup>2</sup>]",
+        "\u0394m<sub>31</sub><sup>2</sup> [10<sup>-5</sup> eV<sup>2</sup>]",
       snaps: [2.457, 0, -2.457],
       precision: 4,
       limits: [-5, 5],
     },
     dCP: {
-      val: 0,
+      val: -0.62 * 3.14159265,
       label: "\u03b4<sub>CP</sub> [rad]",
       snaps: [-0.62 * 3.14159265, 0, 3.14159265 / 2, -3.14159265 / 2],
       precision: 4,
@@ -92,18 +99,24 @@ function makeParMap() {
 class Matrices {
   constructor(pars) {
     // Save a copy of the initial parameter set
-    this.pars = _.cloneDeep(pars);
+    this.p = _.cloneDeep(pars);
+    // No range values allowed.
+    for(const key in this.p) {
+      if(Array.isArray(this.p[key].val)) {
+        this.p[key].val = this.p[key].val[0];
+      }
+    }
 
-    const s12 = math.sin(pars.th12.val);
-    const s23 = math.sin(pars.th23.val);
-    const s13 = math.sin(pars.th13.val);
-    const c12 = math.cos(pars.th12.val);
-    const c23 = math.cos(pars.th23.val);
-    const c13 = math.cos(pars.th13.val);
+    const s12 = math.sin(this.p.th12.val);
+    const s23 = math.sin(this.p.th23.val);
+    const s13 = math.sin(this.p.th13.val);
+    const c12 = math.cos(this.p.th12.val);
+    const c23 = math.cos(this.p.th23.val);
+    const c13 = math.cos(this.p.th13.val);
 
-    this.ch = pars.anti.val;
+    this.ch = this.p.anti.val;
 
-    this.edcp = math.exp(math.complex(0, this.ch * pars.dCP.val));
+    this.edcp = math.exp(math.complex(0, this.ch * this.p.dCP.val));
     this.emdcp = math.pow(this.edcp, -1);
 
     // Construct oscillation matrix.
@@ -131,12 +144,18 @@ class Matrices {
     // Hamiltonian.
     this.H = math.matrix([
       [0, 0, 0],
-      [0, pars.Dm21sq.val * 1e-5, 0],
-      [0, 0, pars.Dm31sq.val * 1e-3],
+      [0, this.p.Dm21sq.val * 1e-5, 0],
+      [0, 0, this.p.Dm31sq.val * 1e-3],
+    ]);
+    this.conv = 1e-6 / ((2 * 1.0545718e-34 * 299792458) / 1.602e-19); // Conversion factor from natural to useful units.
+    this.Hexp = math.matrix([
+      [1, 0, 0],
+      [0, math.exp(math.complex(0, -this.p.Dm21sq.val * 1e-5 * this.conv * this.p.L.val / this.p.E.val)), 0],
+      [0, 0, math.exp(math.complex(0, -this.p.Dm31sq.val * 1e-3 * this.conv * this.p.L.val / this.p.E.val))],
     ]);
 
     const Gf = 4.54164e-37; // Reduced Fermi constant * (c*hbar)^2 in m^2.
-    const Ne = pars.rho.val / 1.672e-27 / 2; // Electron number density in m^-3.
+    const Ne = this.p.rho.val / 1.672e-27 / 2; // Electron number density in m^-3.
     this.V = math.matrix([
       [this.ch * 1.41421356237 * Gf * Ne * 1e3, 0, 0], // Multiply and convert to km^-1. (1.41... = sqrt(2))
       [0, 0, 0],
@@ -144,22 +163,14 @@ class Matrices {
     ]);
   };
 
-  update = function (pars) {
-    // Find all differing keys and update only those parameters that have changed.
-    for (const key in this.pars) {
-      if (
-        this.pars[key].val != pars[key].val &&
-        !Array.isArray(pars[key].val)
-      ) {
-        this.updateFuncs(key, pars[key].val);
-        this.pars[key].val = pars[key].val;
-      }
-    }
-  };
-
-  // Specific update functions to avoid having to recreate all matrices on every update.
-  updateFuncs = function (key, newval) {
+  update = function (key, newval) {
+    this.p[key].val = newval;
     switch (key) {
+      case "L":
+      case "E":
+        this.Hexp._data[1][1] = math.exp(math.complex(0, -this.p.Dm21sq.val * 1e-5 * this.conv * this.p.L.val / this.p.E.val));
+        this.Hexp._data[2][2] = math.exp(math.complex(0, -this.p.Dm31sq.val * 1e-3 * this.conv * this.p.L.val / this.p.E.val));
+        break;
       case "th12":
         const s12 = math.sin(newval);
         const c12 = math.cos(newval);
@@ -198,11 +209,11 @@ class Matrices {
         break;
       case "anti":
         this.ch = newval;
-        this.updateFuncs("dCP", this.pars.dCP.val);
-        this.updateFuncs("rho", this.pars.rho.val);
+        this.updateFuncs("dCP", this.p.dCP.val);
+        this.updateFuncs("rho", this.p.rho.val);
         break;
       case "dCP":
-        const sin13 = math.sin(this.pars.th13.val);
+        const sin13 = math.sin(this.p.th13.val);
         this.edcp = math.exp(math.complex(0, this.ch * newval));
         this.emdcp = math.pow(this.edcp, -1);
         this.U2._data[0][2] = math.multiply(sin13, this.emdcp);
@@ -221,75 +232,50 @@ class Matrices {
   };
 }
 
-function oscillateRange(xv, p, m) {
-  // Use a temporary non-range parameter map to get oscillation results.
-  let tmppars = JSON.parse(JSON.stringify(pars));
-  for (let x of xv) {
-    tmppars[thisArrID].val = x;
-    if (rangeVarIsMixingPar) {
-      mat.update(tmppars);
-    }
-    yValues.push(oscillate(tmppars, mat));
-  }
-  yValues = math.transpose(yValues);
-}
-
-function oscillate(p, m, use_exp = false) {
-  if (Array.isArray(p.rho.val) || p.rho.val != 0) {
-    return use_exp ? transmatexp(p, m) : transmat(p, m);
+function oscillate(m, use_exp = false) {
+  if (Array.isArray(m.p.rho.val) || m.p.rho.val != 0) {
+    return use_exp ? transmatexp(m) : transmat(m);
   } else {
-    return transvac(p, m);
+    return transvac(m);
   }
 }
 
-function transvac(p, m) {
+function transvac(m) {
   var nu = [0, 0, 0];
-  nu[p.nu.val] = 1;
-  const conv = 1e-6 / ((2 * 1.0545718e-34 * 299792458) / 1.602e-19); // Conversion factor from natural to useful units.
-  var Hexp = math.multiply(
-    math.complex(0, 1),
-    (-conv * p.L.val) / p.E.val,
-    m.H
-  );
-  for (var j = 0; j < 3; ++j) Hexp._data[j][j] = math.exp(Hexp.get([j, j]));
-  const UHUdnu = math.multiply(m.U, Hexp, m.Ud, nu);
+  nu[m.p.nu.val] = 1;
+  const UHUdnu = math.multiply(m.U, m.Hexp, m.Ud, nu);
   return math.re(math.dotMultiply(UHUdnu, math.conj(UHUdnu))).valueOf();
 }
 
-function transmat(p, m) {
+function transmat(m) {
   var nu = [0, 0, 0];
-  nu[p.nu.val] = 1;
+  nu[m.p.nu.val] = 1;
 
-  const conv = 1e-6 / ((2 * 1.0545718e-34 * 299792458) / 1.602e-19); // Conversion factor from natural to useful units.
   const N = 128; // Large enough N for Lie product formula.
   // Temporary Hamiltonian to component-wise exponentiate.
-  var Hexp = math.multiply(
-    math.complex(0, 1),
-    (-1 * conv * p.L.val) / p.E.val / N,
-    m.H
-  );
-  for (var j = 0; j < 3; ++j) Hexp._data[j][j] = math.exp(Hexp.get([j, j]));
-  var Vexp = math.multiply(math.complex(0, 1), m.V, (-1 * p.L.val) / N);
-  Vexp._data[0][0] = math.exp(Vexp.get([0, 0]));
-  Vexp._data[1][1] = 1;
-  Vexp._data[2][2] = 1;
+  let Hexp = math.identity(3);
+  for (var j = 1; j < 3; ++j)
+    Hexp._data[j][j] = math.exp(
+      math.complex(0, -m.H.get([j, j]) * m.conv * m.p.L.val / m.p.E.val / N)
+    );
+  let Vexp = math.identity(3);
+  Vexp._data[0][0] = math.exp(math.complex(0, -m.V.get([0, 0]) * m.p.L.val / N));
   // Slow matrix power. Better than exponential...
   const HUdVUpow = math.pow(math.multiply(Hexp, m.Ud, Vexp, m.U), N);
   const UHUdnu = math.multiply(m.U, HUdVUpow, m.Ud, nu);
   return math.re(math.dotMultiply(UHUdnu, math.conj(UHUdnu))).valueOf();
 }
 
-function transmatexp(p, m) {
+function transmatexp(m) {
   var nu = [0, 0, 0];
-  nu[p.nu.val] = 1;
+  nu[m.p.nu.val] = 1;
 
-  const conv = 1e-6 / ((2 * 1.0545718e-34 * 299792458) / 1.602e-19); // Conversion factor from natural to useful units.
   const Htmp = math.multiply(
     math.complex(0, -1),
     m.H,
-    (conv * p.L.val) / p.E.val
+    (m.conv * m.p.L.val) / m.p.E.val
   );
-  const Vtmp = math.multiply(math.complex(0, -1), m.V, p.L.val);
+  const Vtmp = math.multiply(math.complex(0, -1), m.V, m.p.L.val);
   const Hmat = math.add(Htmp, math.multiply(m.Ud, Vtmp, m.U));
   const UHUdnu = math.multiply(m.U, math.expm(Hmat), m.Ud, nu);
   return math.re(math.dotMultiply(UHUdnu, math.conj(UHUdnu))).valueOf();
