@@ -1,2 +1,2 @@
 # WebNeut
-A JavaScript version of [**EigenNeut**](https://github.com/mivermeu/EigenNeut). Visualise and animate (soon™) neutrino oscillations right in your browser.
+A JavaScript version of [**EigenNeut**](https://github.com/mivermeu/EigenNeut). Visualise and animate neutrino oscillations right in your browser. Download oscillation data to manipulate it and plot it in your own style.
