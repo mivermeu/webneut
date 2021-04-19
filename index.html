@@ -514,7 +514,7 @@
     const rangeKey = rangekeys[0];
     const rangeArr = pars[rangeKey].val;
 
-    // Update mixing matrices with changed parameter if it's not the range parameter..
+    // Update mixing matrices with changed parameter if it's not the range parameter.
     if(changeKey != rangeKey) {
       mat.update(changeKey, pars[changeKey].val);
     }

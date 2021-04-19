@@ -163,6 +163,7 @@ class Matrices {
     ]);
   };
 
+  // Function to update the bare minimum of internal parameters for maximum speed.
   update = function (key, newval) {
     this.p[key].val = newval;
     switch (key) {
@@ -202,15 +203,17 @@ class Matrices {
         this.Ud = math.ctranspose(this.U);
         break;
       case "Dm21sq":
-        this.H._data[1][1] = newval * 1e-5;
+        this.H._data[1][1] = this.p.Dm21sq.val * 1e-5;
+        this.Hexp._data[1][1] = math.exp(math.complex(0, -this.p.Dm21sq.val * 1e-5 * this.conv * this.p.L.val / this.p.E.val));
         break;
       case "Dm31sq":
-        this.H._data[2][2] = newval * 1e-3;
+        this.H._data[2][2] = this.p.Dm31sq.val * 1e-3;
+        this.Hexp._data[2][2] = math.exp(math.complex(0, -this.p.Dm31sq.val * 1e-3 * this.conv * this.p.L.val / this.p.E.val));
         break;
       case "anti":
         this.ch = newval;
-        this.updateFuncs("dCP", this.p.dCP.val);
-        this.updateFuncs("rho", this.p.rho.val);
+        this.update("dCP", this.p.dCP.val);
+        this.update("rho", this.p.rho.val);
         break;
       case "dCP":
         const sin13 = math.sin(this.p.th13.val);
